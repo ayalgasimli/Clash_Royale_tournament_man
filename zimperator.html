@@ -42,7 +42,6 @@
     .btn-danger{ background:rgba(255,77,109,0.1); border-color:rgba(255,77,109,0.3); color:var(--danger); }
     .btn-danger:hover{ background:var(--danger); color:white; }
 
-    /* Match Animation */
     @keyframes pulse { 0%{opacity:1} 50%{opacity:0.5} 100%{opacity:1} }
     .checking { animation: pulse 1s infinite; border-color:var(--accent2) !important; }
 
@@ -83,6 +82,10 @@
     
     .hidden{display:none}
     .status{ margin-top:10px; font-size:13px; color:var(--accent2); min-height:20px; }
+    
+    /* Separator line */
+    .sep { border-top: 1px solid var(--line); margin: 15px 0; position:relative; text-align:center; }
+    .sep span { background: var(--card); padding: 0 10px; font-size: 10px; color: var(--muted); position: relative; top: -8px; }
   </style>
 </head>
 <body>
@@ -143,10 +146,21 @@
 
             <div class="card">
                 <h2>2. Add Players</h2>
+                
+                <div class="row">
+                    <select id="existingPlayerSelect" style="flex:1">
+                        <option value="">Loading players...</option>
+                    </select>
+                    <button id="addExistingBtn" style="width:auto; background:var(--card); border-color:var(--muted)">Add</button>
+                </div>
+
+                <div class="sep"><span>OR NEW</span></div>
+
                 <div class="row">
                     <input id="playerTagInput" placeholder="#TAG" style="font-family:monospace">
-                    <button id="addPlayerBtn">Add</button>
+                    <button id="addPlayerBtn">Fetch</button>
                 </div>
+                
                 <div id="playerList" style="margin-top:15px; max-height:300px; overflow-y:auto"></div>
             </div>
 
@@ -217,45 +231,23 @@
         setStatus("Scanning Battle Logs...");
 
         try {
-            // 1. Get unfinished matches with player tags
-            const { data: matches } = await supabase
-                .from('matches')
-                .select('*, pA:player_a_id(tag), pB:player_b_id(tag)')
-                .eq('tournament_id', currentTid)
-                .is('completed', false);
-
+            const { data: matches } = await supabase.from('matches').select('*, pA:player_a_id(tag), pB:player_b_id(tag)').eq('tournament_id', currentTid).is('completed', false);
             if(!matches || matches.length === 0) {
-                setStatus("No unfinished matches to check.");
-                btn.disabled = false; btn.innerText = "⚡ Auto-Check Results";
-                return;
+                setStatus("No unfinished matches."); btn.disabled = false; btn.innerText = "⚡ Auto-Check Results"; return;
             }
-
             let updates = 0;
-
-            // 2. Loop through matches
             for (const m of matches) {
-                // Skip if missing tags
                 if(!m.pA?.tag || !m.pB?.tag) continue;
-
-                // Mark visual checking state
                 const card = document.getElementById(`match-${m.id}`);
                 if(card) card.classList.add('checking');
 
-                // 3. Fetch Battle Log for Player A
                 const log = await callApi({ playerTag: m.pA.tag, mode: 'battlelog' });
-
-                // 4. Look for a battle against Player B
                 const targetTag = m.pB.tag.replace('#','');
-                const battle = log.find(b => 
-                    b.opponent[0].tag.replace('#','') === targetTag
-                );
+                const battle = log.find(b => b.opponent[0].tag.replace('#','') === targetTag);
 
                 if (battle) {
-                    // 5. Determine Winner
-                    // Team[0] is Player A, Opponent[0] is Player B
                     const crownsA = battle.team[0].crowns;
                     const crownsB = battle.opponent[0].crowns;
-                    
                     let winnerId = null;
                     if(crownsA > crownsB) winnerId = m.player_a_id;
                     else if(crownsB > crownsA) winnerId = m.player_b_id;
@@ -265,19 +257,14 @@
                         updates++;
                     }
                 }
-                
-                // Remove visual state
                 if(card) card.classList.remove('checking');
             }
-
             setStatus(`Check complete. Updated ${updates} matches.`);
             refreshData();
-
         } catch (e) {
             setStatus("Auto-Check Error: " + e.message);
         } finally {
-            btn.disabled = false;
-            btn.innerText = "⚡ Auto-Check Results";
+            btn.disabled = false; btn.innerText = "⚡ Auto-Check Results";
         }
     }
 
@@ -285,13 +272,15 @@
 
     async function init() {
         await loadTournaments();
+        await loadExistingPlayers(); // Load existing players on start
         if(currentTid) await refreshData();
         
         $('createTourneyBtn').onclick = createTournament;
         $('addPlayerBtn').onclick = addPlayer;
+        $('addExistingBtn').onclick = addExistingPlayer; // New Listener
         $('generateBtn').onclick = generateSchedule;
         $('refreshBtn').onclick = refreshData;
-        $('autoCheckBtn').onclick = autoCheckResults; // New Listener
+        $('autoCheckBtn').onclick = autoCheckResults;
         
         $('tourneySelect').onchange = (e) => {
             currentTid = e.target.value;
@@ -301,9 +290,9 @@
         
         $('deleteTourneyBtn').onclick = async () => {
              if(!currentTid) return;
-             if(!confirm('Delete this tournament?\nThis deletes all matches and rankings.')) return;
+             if(!confirm('Delete this tournament?')) return;
              const { error } = await supabase.from('tournaments').delete().eq('id', currentTid);
-             if(error) { alert("Delete Failed: " + error.message); } 
+             if(error) { alert("Failed: " + error.message); } 
              else {
                  alert("Tournament Deleted.");
                  currentTid = null; localStorage.removeItem('cr_tid');
@@ -330,13 +319,20 @@
         const sel = $('tourneySelect');
         if(data && data.length) {
             sel.innerHTML = data.map(t => `<option value="${t.id}">${t.name}</option>`).join('');
-            if(currentTid && data.find(t => t.id === currentTid)) {
-                sel.value = currentTid;
-            } else {
-                currentTid = data[0].id; sel.value = currentTid;
-            }
+            if(currentTid && data.find(t => t.id === currentTid)) sel.value = currentTid;
+            else { currentTid = data[0].id; sel.value = currentTid; }
+        } else { sel.innerHTML = '<option>No tournaments</option>'; }
+    }
+
+    // NEW: Load all existing players for dropdown
+    async function loadExistingPlayers() {
+        const { data } = await supabase.from('players').select('id, name, tag').order('name');
+        const sel = $('existingPlayerSelect');
+        if(data && data.length) {
+            sel.innerHTML = '<option value="">-- Select Existing Player --</option>' + 
+                            data.map(p => `<option value="${p.id}">${p.name} (${p.tag})</option>`).join('');
         } else {
-            sel.innerHTML = '<option>No tournaments</option>';
+            sel.innerHTML = '<option>No existing players found</option>';
         }
     }
 
@@ -358,14 +354,13 @@
 
     // --- PLAYERS ---
 
+    // Option 1: Add by Tag
     async function addPlayer() {
         const input = $('playerTagInput').value.trim();
         if(!input) return;
         setStatus('Fetching Stats...');
         try {
-            // Call API via local proxy
             const stats = await callApi({ playerTag: input });
-            
             const { data: player, error } = await supabase.from('players').upsert({ 
                 tag: stats.tag, name: stats.name, trophies: stats.trophies,
                 best_rank: stats.bestRank, avatar_url: stats.avatarUrl,
@@ -373,14 +368,29 @@
             }, { onConflict: 'tag' }).select().single();
 
             if(error) throw error;
-
-            const { error: linkErr } = await supabase.from('tournament_players').insert({ tournament_id: currentTid, player_id: player.id });
-            if(linkErr && linkErr.code !== '23505') throw linkErr;
-
+            await addToTournament(player.id);
             $('playerTagInput').value = '';
-            refreshData();
+            // Reload dropdown so new player appears there too
+            loadExistingPlayers();
         } catch (e) {
             setStatus("Failed: " + e.message);
+        }
+    }
+
+    // Option 2: Add Existing
+    async function addExistingPlayer() {
+        const pid = $('existingPlayerSelect').value;
+        if(!pid) return setStatus("Please select a player first.");
+        await addToTournament(pid);
+    }
+
+    async function addToTournament(pid) {
+        const { error } = await supabase.from('tournament_players').insert({ tournament_id: currentTid, player_id: pid });
+        if(error) {
+            if(error.code === '23505') setStatus("Player is already in this tournament.");
+            else setStatus("Error: " + error.message);
+        } else {
+            refreshData();
         }
     }
 
