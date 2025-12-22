@@ -353,7 +353,7 @@
     }
 
     // --- PLAYER MGMT ---
-
+  
     async function addPlayer() {
         const input = $('playerTagInput').value.trim();
         if(!input) return;
@@ -373,7 +373,26 @@
             setStatus("Failed: " + e.message);
         }
     }
-
+  async function callApi(payload) {
+        try {
+            const response = await fetch(FUNCTION_URL, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload)
+            });
+            
+            // Fix: Parse the error message from the server instead of generic "API Error"
+            if(!response.ok) {
+                const errData = await response.json().catch(() => ({}));
+                throw new Error(errData.error || `Server Error (${response.status})`);
+            }
+            
+            return await response.json();
+        } catch (err) {
+            console.error(err);
+            throw err;
+        }
+    }
     async function addExistingPlayer() {
         const pid = $('existingPlayerSelect').value;
         if(!pid) return setStatus("Select a player first.");
