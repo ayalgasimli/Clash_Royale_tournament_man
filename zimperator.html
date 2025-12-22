@@ -83,7 +83,6 @@
     .hidden{display:none}
     .status{ margin-top:10px; font-size:13px; color:var(--accent2); min-height:20px; }
     
-    /* Separator line */
     .sep { border-top: 1px solid var(--line); margin: 15px 0; position:relative; text-align:center; }
     .sep span { background: var(--card); padding: 0 10px; font-size: 10px; color: var(--muted); position: relative; top: -8px; }
   </style>
@@ -146,21 +145,17 @@
 
             <div class="card">
                 <h2>2. Add Players</h2>
-                
                 <div class="row">
                     <select id="existingPlayerSelect" style="flex:1">
                         <option value="">Loading players...</option>
                     </select>
                     <button id="addExistingBtn" style="width:auto; background:var(--card); border-color:var(--muted)">Add</button>
                 </div>
-
                 <div class="sep"><span>OR NEW</span></div>
-
                 <div class="row">
                     <input id="playerTagInput" placeholder="#TAG" style="font-family:monospace">
                     <button id="addPlayerBtn">Fetch</button>
                 </div>
-                
                 <div id="playerList" style="margin-top:15px; max-height:300px; overflow-y:auto"></div>
             </div>
 
@@ -205,7 +200,7 @@
     let playersCache = [];
     const FUNCTION_URL = "http://localhost:8000"; 
 
-    // --- API & BATTLE LOGIC ---
+    // --- API & LOGIC ---
 
     async function callApi(payload) {
         try {
@@ -222,14 +217,11 @@
         }
     }
 
-    // --- AUTO RESULT CHECKER ---
     async function autoCheckResults() {
         if(!currentTid) return;
         const btn = $('autoCheckBtn');
-        btn.disabled = true; 
-        btn.innerText = "Checking...";
+        btn.disabled = true; btn.innerText = "Checking...";
         setStatus("Scanning Battle Logs...");
-
         try {
             const { data: matches } = await supabase.from('matches').select('*, pA:player_a_id(tag), pB:player_b_id(tag)').eq('tournament_id', currentTid).is('completed', false);
             if(!matches || matches.length === 0) {
@@ -240,18 +232,15 @@
                 if(!m.pA?.tag || !m.pB?.tag) continue;
                 const card = document.getElementById(`match-${m.id}`);
                 if(card) card.classList.add('checking');
-
                 const log = await callApi({ playerTag: m.pA.tag, mode: 'battlelog' });
                 const targetTag = m.pB.tag.replace('#','');
                 const battle = log.find(b => b.opponent[0].tag.replace('#','') === targetTag);
-
                 if (battle) {
                     const crownsA = battle.team[0].crowns;
                     const crownsB = battle.opponent[0].crowns;
                     let winnerId = null;
                     if(crownsA > crownsB) winnerId = m.player_a_id;
                     else if(crownsB > crownsA) winnerId = m.player_b_id;
-                    
                     if(winnerId) {
                         await supabase.from('matches').update({ winner_id: winnerId, completed: true }).eq('id', m.id);
                         updates++;
@@ -268,16 +257,16 @@
         }
     }
 
-    // --- INIT & LISTENERS ---
+    // --- INIT ---
 
     async function init() {
         await loadTournaments();
-        await loadExistingPlayers(); // Load existing players on start
+        await loadExistingPlayers();
         if(currentTid) await refreshData();
         
         $('createTourneyBtn').onclick = createTournament;
         $('addPlayerBtn').onclick = addPlayer;
-        $('addExistingBtn').onclick = addExistingPlayer; // New Listener
+        $('addExistingBtn').onclick = addExistingPlayer;
         $('generateBtn').onclick = generateSchedule;
         $('refreshBtn').onclick = refreshData;
         $('autoCheckBtn').onclick = autoCheckResults;
@@ -312,8 +301,6 @@
         }
     }
 
-    // --- DATA LOADERS ---
-
     async function loadTournaments() {
         const { data } = await supabase.from('tournaments').select('*').order('created_at', { ascending:false });
         const sel = $('tourneySelect');
@@ -324,7 +311,6 @@
         } else { sel.innerHTML = '<option>No tournaments</option>'; }
     }
 
-    // NEW: Load all existing players for dropdown
     async function loadExistingPlayers() {
         const { data } = await supabase.from('players').select('id, name, tag').order('name');
         const sel = $('existingPlayerSelect');
@@ -341,20 +327,17 @@
         setStatus('Loading...');
         const tName = $('tourneySelect').options[$('tourneySelect').selectedIndex]?.text;
         $('activeTourneyName').innerText = tName || "None";
-
         const { data: pData } = await supabase.from('tournament_players').select('player_id, players(*)').eq('tournament_id', currentTid);
         playersCache = pData ? pData.map(d => d.players) : [];
         renderPlayerList();
-
         const { data: matches } = await supabase.from('matches').select('*').eq('tournament_id', currentTid).order('round_number');
         renderMatches(matches || []);
         calculateAndRenderStandings(matches || []);
         setStatus('Ready');
     }
 
-    // --- PLAYERS ---
+    // --- PLAYER MGMT ---
 
-    // Option 1: Add by Tag
     async function addPlayer() {
         const input = $('playerTagInput').value.trim();
         if(!input) return;
@@ -366,18 +349,15 @@
                 best_rank: stats.bestRank, avatar_url: stats.avatarUrl,
                 favorite_card: stats.favoriteCard
             }, { onConflict: 'tag' }).select().single();
-
             if(error) throw error;
             await addToTournament(player.id);
             $('playerTagInput').value = '';
-            // Reload dropdown so new player appears there too
             loadExistingPlayers();
         } catch (e) {
             setStatus("Failed: " + e.message);
         }
     }
 
-    // Option 2: Add Existing
     async function addExistingPlayer() {
         const pid = $('existingPlayerSelect').value;
         if(!pid) return setStatus("Please select a player first.");
@@ -389,9 +369,15 @@
         if(error) {
             if(error.code === '23505') setStatus("Player is already in this tournament.");
             else setStatus("Error: " + error.message);
-        } else {
-            refreshData();
-        }
+        } else { refreshData(); }
+    }
+    
+    // NEW: Remove Player Function
+    window.removePlayer = async (pid) => {
+        if(!confirm("Remove this player from the tournament?")) return;
+        const { error } = await supabase.from('tournament_players').delete().eq('tournament_id', currentTid).eq('player_id', pid);
+        if(error) setStatus("Error: " + error.message);
+        else refreshData();
     }
 
     function renderPlayerList() {
@@ -404,7 +390,10 @@
                         <span class="tag-badge">${p.tag || ''}</span>
                     </div>
                 </div>
-                <div style="font-size:12px; color:var(--gold)">🏆 ${p.trophies}</div>
+                <div style="display:flex; align-items:center; gap:10px">
+                    <div style="font-size:12px; color:var(--gold)">🏆 ${p.trophies}</div>
+                    <button class="btn-danger" style="padding:4px 8px; font-size:10px; line-height:1" onclick="removePlayer('${p.id}')">✕</button>
+                </div>
             </div>
         `).join('');
     }
@@ -416,7 +405,6 @@
         setStatus('Generating...');
         const pIds = playersCache.map(p => p.id);
         if(pIds.length % 2 !== 0) pIds.push(null);
-        
         const n = pIds.length;
         const rounds = [];
         for(let r=0; r < n-1; r++) {
@@ -439,7 +427,6 @@
             if(!byRound[m.round_number]) byRound[m.round_number] = [];
             byRound[m.round_number].push(m);
         });
-
         let html = '';
         Object.keys(byRound).forEach(r => {
             html += `<div style="margin-top:15px; margin-bottom:5px; font-size:12px; color:var(--muted); font-weight:bold; letter-spacing:1px">ROUND ${r}</div>`;
@@ -448,7 +435,6 @@
                 const pB = playersCache.find(p => p.id === m.player_b_id) || {name:'?'};
                 const winA = m.winner_id === m.player_a_id;
                 const winB = m.winner_id === m.player_b_id;
-                
                 html += `
                 <div class="match-card" id="match-${m.id}">
                     <div class="match-players">
@@ -485,7 +471,6 @@
             }
         });
         const sorted = Object.values(stats).sort((a,b) => b.pts - a.pts || b.trophies - a.trophies);
-        
         $('standingsContainer').innerHTML = `<table><thead><tr><th>Rk</th><th>Player</th><th>W</th><th>L</th><th>Pts</th></tr></thead><tbody>
             ${sorted.map((p,i) => `<tr>
                 <td>#${i+1}</td>
