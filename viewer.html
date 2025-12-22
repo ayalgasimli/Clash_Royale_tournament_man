@@ -1,0 +1,306 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Tournament Hub</title>
+  <style>
+    :root{
+      --bg:#0b1020; --card:#111a33; --text:#e9eeff; --muted:#a8b0d6;
+      --line:rgba(255,255,255,.10); --accent:#7c5cff; --accent2:#2ee59d;
+      --winner: #2ee59d; --loser: #ff4d6d;
+      --shadow: 0 12px 30px rgba(0,0,0,.35); --radius:18px;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0; font-family: ui-sans-serif, system-ui, -apple-system, sans-serif;
+      background: radial-gradient(1200px 700px at 30% 0%, rgba(124,92,255,.15), transparent 55%), var(--bg);
+      color:var(--text);
+    }
+    .wrap{max-width:900px;margin:28px auto;padding:0 16px 40px}
+
+    /* --- LAYOUT UTILS --- */
+    .hidden { display:none !important; }
+    .btn-icon { cursor:pointer; background:none; border:none; color:var(--text); font-size:20px; padding:5px; }
+    .btn-back {
+        display:inline-flex; align-items:center; gap:8px;
+        background: rgba(255,255,255,0.05); border:1px solid var(--line);
+        color:var(--muted); padding:8px 16px; border-radius:99px;
+        cursor:pointer; font-size:13px; transition:0.2s;
+    }
+    .btn-back:hover { background: rgba(255,255,255,0.1); color:white; }
+
+    /* --- HOME: TOURNAMENT LIST --- */
+    .hero { text-align:center; margin-bottom:30px; }
+    .hero h1 { font-size:36px; margin:0 0 10px; background: linear-gradient(to right, #fff, #a8b0d6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .hero p { color:var(--muted); margin:0; }
+
+    .tourney-grid { display:grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap:16px; }
+    .tourney-card {
+        background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+        border:1px solid var(--line); border-radius:16px; padding:20px;
+        cursor:pointer; transition: transform 0.2s, border-color 0.2s;
+        text-decoration: none; display:block; color:inherit;
+    }
+    .tourney-card:hover { transform:translateY(-3px); border-color:var(--accent); }
+    .t-name { font-size:18px; font-weight:bold; display:block; margin-bottom:6px; }
+    .t-date { font-size:12px; color:var(--muted); display:block; }
+    .t-arrow { float:right; opacity:0.3; }
+
+    /* --- DETAIL VIEW --- */
+    header { display:flex; align-items:center; justify-content:space-between; margin-bottom:20px; }
+    .detail-title h1 { margin:0; font-size:24px; }
+    .detail-title span { color:var(--muted); font-size:13px; font-family:monospace; }
+    
+    .card { background: rgba(17, 26, 51, 0.6); border:1px solid var(--line); border-radius:var(--radius); padding:20px; margin-bottom:20px; }
+    h2 { margin:0 0 15px; font-size:18px; color:var(--muted); text-transform:uppercase; letter-spacing:1px; font-size:12px; }
+
+    /* Standings Table */
+    table{width:100%; border-collapse:collapse;}
+    th,td{border-bottom:1px solid var(--line); padding:12px 8px; text-align:left; font-size:14px}
+    th{color:var(--muted); font-weight:600; font-size:11px; text-transform:uppercase;}
+    .rank-1{ color: #ffd700; font-weight:bold; } 
+    .rank-2{ color: #c0c0c0; font-weight:bold; }
+    .rank-3{ color: #cd7f32; font-weight:bold; }
+
+    /* Matches */
+    .match-row {
+        display:flex; justify-content:space-between; align-items:center;
+        background:rgba(0,0,0,0.2); border:1px solid var(--line);
+        padding:10px 14px; border-radius:10px; margin-bottom:8px;
+    }
+    .m-round { font-size:11px; color:var(--muted); text-transform:uppercase; margin-bottom:6px; font-weight:bold; margin-top:12px;}
+    .p-name { font-weight:600; }
+    .vs { color:var(--muted); font-size:12px; margin:0 12px; }
+    .win { color:var(--winner); }
+    .lose { opacity:0.5; text-decoration:line-through; }
+    
+    .loader { text-align:center; padding:40px; color:var(--muted); }
+  </style>
+</head>
+<body>
+
+<div class="wrap">
+  
+  <div id="listView">
+    <div class="hero">
+      <h1>Tournament Hub</h1>
+      <p>Select a tournament to view results</p>
+    </div>
+    <div id="listLoader" class="loader">Loading tournaments...</div>
+    <div id="tourneyGrid" class="tourney-grid"></div>
+  </div>
+
+  <div id="detailView" class="hidden">
+    <header>
+      <button class="btn-back" id="backBtn">← Back to List</button>
+      <div style="text-align:right">
+        <button class="btn-back" id="refreshBtn">↻ Refresh</button>
+      </div>
+    </header>
+
+    <div class="detail-title" style="text-align:center; margin-bottom:30px;">
+      <h1 id="dName">Tournament Name</h1>
+      <span id="dDate">Date</span>
+    </div>
+
+    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px;">
+      <div class="card">
+        <h2>Standings</h2>
+        <div id="standingsArea"></div>
+      </div>
+      
+      <div class="card">
+        <h2>Match History</h2>
+        <div id="matchesArea"></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script type="module">
+    const SUPABASE_URL = "https://izmzpnfpcdxdqwgghsyq.supabase.co";
+    const SUPABASE_ANON_KEY = "sb_publishable_4kW-ZwFSbzqPkWz63jYcGw_Kldfdp7R";
+
+    import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
+    const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    const $ = (id) => document.getElementById(id);
+    let currentTid = null;
+
+    // --- INITIALIZATION ---
+    async function init(){
+        // Check if URL has a specific ID (for direct sharing)
+        const urlParams = new URLSearchParams(window.location.search);
+        const tid = urlParams.get('t');
+
+        if(tid) {
+            await openTournament(tid);
+        } else {
+            await loadList();
+        }
+    }
+
+    // --- VIEW 1: LOAD LIST ---
+    async function loadList(){
+        showView('list');
+        const { data, error } = await supabase
+            .from("tournaments")
+            .select("id,name,created_at")
+            .order("created_at", { ascending:false })
+            .limit(50);
+        
+        $('listLoader').classList.add('hidden');
+        
+        if(error) {
+            $('tourneyGrid').innerHTML = `Error: ${error.message}`;
+            return;
+        }
+
+        $('tourneyGrid').innerHTML = data.map(t => `
+            <div class="tourney-card" data-id="${t.id}">
+                <span class="t-arrow">➔</span>
+                <span class="t-name">${escapeHtml(t.name)}</span>
+                <span class="t-date">${fmtDate(t.created_at)}</span>
+            </div>
+        `).join("");
+
+        // Add Click Listeners
+        document.querySelectorAll('.tourney-card').forEach(card => {
+            card.addEventListener('click', () => {
+                openTournament(card.getAttribute('data-id'));
+            });
+        });
+    }
+
+    // --- VIEW 2: OPEN TOURNAMENT ---
+    async function openTournament(tid){
+        currentTid = tid;
+        // Update URL without reload so user can copy/paste
+        const url = new URL(window.location);
+        url.searchParams.set('t', tid);
+        window.history.pushState({}, '', url);
+
+        showView('detail');
+        $('dName').textContent = "Loading...";
+        $('dDate').textContent = "";
+        $('standingsArea').innerHTML = '<div class="loader">Loading...</div>';
+        $('matchesArea').innerHTML = '<div class="loader">Loading...</div>';
+
+        // 1. Get Info
+        const { data: info } = await supabase.from("tournaments").select("*").eq("id", tid).single();
+        if(info){
+            $('dName').textContent = info.name;
+            $('dDate').textContent = fmtDate(info.created_at);
+        }
+
+        // 2. Get Data
+        await loadDetails(tid);
+    }
+
+    async function loadDetails(tid){
+        // Fetch Matches & Players
+        const { data: matches } = await supabase
+            .from("matches")
+            .select("*, playersA:player_a_id(name), playersB:player_b_id(name)")
+            .eq("tournament_id", tid)
+            .order("round_number", { ascending:true });
+
+        const { data: players } = await supabase
+            .from("tournament_players")
+            .select("player_id, players(name)")
+            .eq("tournament_id", tid);
+
+        // Calc Standings
+        const stats = new Map();
+        if(players) players.forEach(p => stats.set(p.player_id, { name:p.players.name, w:0, l:0, p:0 }));
+
+        const rounds = {};
+
+        if(matches){
+            matches.forEach(m => {
+                // Schedule Grouping
+                if(!rounds[m.round_number]) rounds[m.round_number] = [];
+                rounds[m.round_number].push(m);
+
+                // Standings Logic
+                if(m.completed && m.winner_id){
+                    const pA = stats.get(m.player_a_id);
+                    const pB = stats.get(m.player_b_id);
+                    if(pA && pB){
+                        pA.p++; pB.p++;
+                        if(m.winner_id === m.player_a_id) { pA.w++; pB.l++; }
+                        else { pB.w++; pA.l++; }
+                    }
+                }
+            });
+        }
+
+        renderStandings(stats);
+        renderMatches(rounds);
+    }
+
+    // --- RENDERERS ---
+    function renderStandings(map){
+        const list = [...map.values()].sort((a,b) => (b.w - a.w) || (a.l - b.l));
+        let html = `<table><thead><tr><th>#</th><th>Player</th><th>W</th><th>L</th></tr></thead><tbody>`;
+        list.forEach((p,i) => {
+             const r = i===0?'rank-1':i===1?'rank-2':i===2?'rank-3':'';
+             html += `<tr><td class="${r}">${i+1}</td><td style="font-weight:600">${escapeHtml(p.name)}</td><td>${p.w}</td><td>${p.l}</td></tr>`;
+        });
+        html += `</tbody></table>`;
+        $('standingsArea').innerHTML = list.length ? html : '<div class="loader">No players found.</div>';
+    }
+
+    function renderMatches(rounds){
+        let html = "";
+        Object.keys(rounds).sort((a,b)=>a-b).forEach(r => {
+            html += `<div class="m-round">Round ${r}</div>`;
+            rounds[r].forEach(m => {
+                const nA = m.playersA?.name || "?";
+                const nB = m.playersB?.name || "?";
+                let cA = "p-name", cB = "p-name", mid = "<span class='vs'>vs</span>";
+                
+                if(m.completed){
+                    if(m.winner_id == m.player_a_id){ cA+=" win"; cB+=" lose"; mid=`<span class='vs win'>1-0</span>`; }
+                    else { cB+=" win"; cA+=" lose"; mid=`<span class='vs win'>0-1</span>`; }
+                }
+                html += `<div class="match-row"><span class="${cA}">${escapeHtml(nA)}</span>${mid}<span class="${cB}">${escapeHtml(nB)}</span></div>`;
+            });
+        });
+        $('matchesArea').innerHTML = html || '<div class="loader">No matches generated yet.</div>';
+    }
+
+    // --- HELPERS ---
+    function showView(view){
+        if(view === 'list'){
+            $('listView').classList.remove('hidden');
+            $('detailView').classList.add('hidden');
+        } else {
+            $('listView').classList.add('hidden');
+            $('detailView').classList.remove('hidden');
+        }
+    }
+    
+    function escapeHtml(s){ return (s??"").toString().replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+    function fmtDate(d){ try{return new Date(d).toLocaleDateString();}catch{return d;} }
+
+    // --- LISTENERS ---
+    $('backBtn').addEventListener('click', () => {
+        // Clear URL param
+        const url = new URL(window.location);
+        url.searchParams.delete('t');
+        window.history.pushState({}, '', url);
+        loadList(); // Refresh list to get new ones
+    });
+
+    $('refreshBtn').addEventListener('click', () => {
+        if(currentTid) loadDetails(currentTid);
+    });
+
+    // Start
+    init();
+</script>
+</body>
+</html>
