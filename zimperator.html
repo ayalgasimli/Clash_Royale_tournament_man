@@ -150,11 +150,11 @@
             <div class="card">
                 <h2>2. Add Players</h2>
                 <p style="font-size:12px; color:var(--muted); margin-bottom:10px;">
-                    Enter a CR Player Tag (e.g. #2P090) or just a name to auto-fetch stats.
+                    Enter a CR Player Tag (e.g. #2P090) to auto-fetch stats.
                 </p>
                 
                 <div class="row">
-                    <input id="playerTagInput" placeholder="#TAG (or Name)" style="font-family:monospace">
+                    <input id="playerTagInput" placeholder="#TAG" style="font-family:monospace">
                     <button id="addPlayerBtn">Add</button>
                 </div>
                 
@@ -204,26 +204,39 @@
     let currentTid = localStorage.getItem('cr_tid') || null;
     let playersCache = [];
 
-    // --- MOCK API (To simulate Clash Royale Data) ---
-    // Since we don't have a backend proxy, this simulates fetching data
-    async function fetchMockStats(tagInput) {
-        // Simulating network delay
-        await new Promise(r => setTimeout(r, 600)); 
-        
-        // Mock Data Generator
-        const isTag = tagInput.startsWith('#');
-        const cleanName = tagInput.replace('#','');
-        
-        const randomTrophies = Math.floor(Math.random() * (9000 - 4000) + 4000);
-        return {
-            tag: isTag ? tagInput.toUpperCase() : `#${cleanName.toUpperCase().slice(0,5)}`,
-            name: tagInput,
-            trophies: randomTrophies,
-            bestRank: randomTrophies > 7000 ? Math.floor(Math.random() * 1000) : 0,
-            favoriteCard: ['Mega Knight', 'Hog Rider', 'Log', 'P.E.K.K.A', 'Miner'][Math.floor(Math.random()*5)],
-            // Generates a unique avatar based on the name
-            avatarUrl: `https://ui-avatars.com/api/?name=${tagInput}&background=random&color=fff`
-        };
+    // --- REAL API CONNECTION (Local Deno Server) ---
+    async function fetchClashRoyaleStats(tagInput) {
+        // This points to your local terminal running Deno
+        // Must be running: deno run --allow-net --allow-env --watch supabase/functions/clash-proxy/index.ts
+        const FUNCTION_URL = "http://localhost:8000"; 
+
+        try {
+            const response = await fetch(FUNCTION_URL, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ playerTag: tagInput })
+            });
+
+            if(!response.ok) {
+                const errData = await response.json().catch(() => ({}));
+                throw new Error(errData.error || "Player not found or Server is offline");
+            }
+            
+            const data = await response.json();
+            return {
+                tag: data.tag,
+                name: data.name,
+                trophies: data.trophies,
+                bestRank: data.bestRank,
+                favoriteCard: data.favoriteCard,
+                avatarUrl: data.avatarUrl
+            };
+            
+        } catch (err) {
+            console.error(err);
+            alert("Connection Error: Make sure your Deno terminal is running!\n\nDetails: " + err.message);
+            throw err;
+        }
     }
 
     // --- CORE LOGIC ---
@@ -264,9 +277,7 @@
         const sel = $('tourneySelect');
         if(data && data.length) {
             sel.innerHTML = data.map(t => `<option value="${t.id}">${t.name}</option>`).join('');
-            // Set selection logic
             if(currentTid) {
-                // verify exists
                 const exists = data.find(t => t.id === currentTid);
                 if(exists) sel.value = currentTid;
                 else { currentTid = data[0].id; sel.value = currentTid; }
@@ -287,14 +298,12 @@
         const tName = $('tourneySelect').options[$('tourneySelect').selectedIndex]?.text;
         $('activeTourneyName').innerText = tName || "None";
 
-        // 1. Get Players for this tournament
-        // We join tournament_players -> players
+        // 1. Get Players
         const { data: pData } = await supabase
             .from('tournament_players')
             .select('player_id, players(*)')
             .eq('tournament_id', currentTid);
         
-        // Extract flat player objects
         playersCache = pData ? pData.map(d => d.players) : [];
         renderPlayerList();
 
@@ -318,37 +327,40 @@
 
         setStatus('Fetching Stats...');
         
-        // 1. Simulate API Call to get "High Level" data
-        const stats = await fetchMockStats(input);
-        
-        // 2. Insert into Global Players Table (Upsert)
-        // If tag exists, update stats. If not, create.
-        const { data: player, error } = await supabase
-            .from('players')
-            .upsert({ 
-                tag: stats.tag,
-                name: stats.name, 
-                trophies: stats.trophies,
-                best_rank: stats.bestRank,
-                avatar_url: stats.avatarUrl,
-                favorite_card: stats.favoriteCard
-            }, { onConflict: 'tag' })
-            .select()
-            .single();
+        try {
+            // 1. Call Real API
+            const stats = await fetchClashRoyaleStats(input);
+            
+            // 2. Insert into Global Players Table
+            const { data: player, error } = await supabase
+                .from('players')
+                .upsert({ 
+                    tag: stats.tag,
+                    name: stats.name, 
+                    trophies: stats.trophies,
+                    best_rank: stats.bestRank,
+                    avatar_url: stats.avatarUrl,
+                    favorite_card: stats.favoriteCard
+                }, { onConflict: 'tag' })
+                .select()
+                .single();
 
-        if(error) { setStatus('Error: ' + error.message); return; }
+            if(error) { setStatus('Error: ' + error.message); return; }
 
-        // 3. Link to Tournament
-        const { error: linkErr } = await supabase
-            .from('tournament_players')
-            .insert({ tournament_id: currentTid, player_id: player.id });
+            // 3. Link to Tournament
+            const { error: linkErr } = await supabase
+                .from('tournament_players')
+                .insert({ tournament_id: currentTid, player_id: player.id });
 
-        if(linkErr) {
-            if(linkErr.code === '23505') setStatus('Player already in tournament!'); 
-            else setStatus('Error linking player');
-        } else {
-            $('playerTagInput').value = '';
-            refreshData();
+            if(linkErr) {
+                if(linkErr.code === '23505') setStatus('Player already in tournament!'); 
+                else setStatus('Error linking player');
+            } else {
+                $('playerTagInput').value = '';
+                refreshData();
+            }
+        } catch (e) {
+            setStatus("Failed: " + e.message);
         }
     }
 
@@ -379,12 +391,11 @@
         const n = pIds.length;
         const rounds = [];
         
-        // Circle Method Algorithm
+        // Circle Method
         for(let r=0; r < n-1; r++) {
             for(let i=0; i < n/2; i++) {
                 const a = pIds[i];
                 const b = pIds[n-1-i];
-                // If neither is 'Bye', create match
                 if(a && b) rounds.push({ 
                     tournament_id: currentTid, 
                     round_number: r+1, 
@@ -392,7 +403,6 @@
                     player_b_id: b 
                 });
             }
-            // Rotate array
             pIds.splice(1, 0, pIds.pop());
         }
 
@@ -404,7 +414,6 @@
     function renderMatches(matches) {
         if(!matches.length) return $('matchesContainer').innerHTML = '<p class="muted">No matches.</p>';
         
-        // Group by Round
         const byRound = {};
         matches.forEach(m => {
             if(!byRound[m.round_number]) byRound[m.round_number] = [];
@@ -449,7 +458,6 @@
     // --- STANDINGS ---
     
     function calculateAndRenderStandings(matches) {
-        // Init stats for all players in this tournament
         const stats = {};
         playersCache.forEach(p => {
             stats[p.id] = { ...p, w:0, l:0, pts:0, played:0 };
@@ -459,7 +467,6 @@
             if(m.completed && m.winner_id) {
                 const w = stats[m.winner_id];
                 const l = stats[m.player_a_id === m.winner_id ? m.player_b_id : m.player_a_id];
-                // Check if players still exist (might have been deleted)
                 if(w && l) {
                     w.w++; w.pts+=3; w.played++;
                     l.l++; l.played++;
@@ -467,7 +474,6 @@
             }
         });
 
-        // Sort: Points first, then Trophies (typical CR tiebreaker)
         const sorted = Object.values(stats).sort((a,b) => b.pts - a.pts || b.trophies - a.trophies);
         
         $('standingsContainer').innerHTML = `
@@ -499,7 +505,6 @@
         const { data } = await supabase.from('tournaments').insert({name}).select().single();
         if(data) {
             currentTid = data.id;
-            // Reload list and select new one
             await loadTournaments();
             $('tourneySelect').value = currentTid;
             refreshData();
@@ -509,7 +514,6 @@
 
     function setStatus(msg) { $('statusMsg').innerText = msg; }
     
-    // Make modal global for onclick events
     window.openProfile = (pid) => {
         const p = playersCache.find(x => x.id == pid);
         if(!p) return;
