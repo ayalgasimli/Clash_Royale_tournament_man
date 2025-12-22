@@ -144,19 +144,28 @@
             </div>
 
             <div class="card">
-                <h2>2. Add Players</h2>
+                <h2>2. Manage Players</h2>
+                
+                <p style="font-size:11px; color:var(--muted); margin-bottom:5px">DATABASE</p>
                 <div class="row">
                     <select id="existingPlayerSelect" style="flex:1">
-                        <option value="">Loading players...</option>
+                        <option value="">Loading...</option>
                     </select>
-                    <button id="addExistingBtn" style="width:auto; background:var(--card); border-color:var(--muted)">Add</button>
                 </div>
-                <div class="sep"><span>OR NEW</span></div>
+                <div class="row">
+                    <button id="addExistingBtn" style="background:var(--card); border-color:var(--muted)">Add to Tourney</button>
+                    <button id="deleteGlobalBtn" class="btn-danger">Delete from DB</button>
+                </div>
+
+                <div class="sep"><span>OR FETCH NEW</span></div>
+
                 <div class="row">
                     <input id="playerTagInput" placeholder="#TAG" style="font-family:monospace">
                     <button id="addPlayerBtn">Fetch</button>
                 </div>
-                <div id="playerList" style="margin-top:15px; max-height:300px; overflow-y:auto"></div>
+                
+                <div style="font-size:11px; color:var(--muted); margin:15px 0 5px">IN THIS TOURNAMENT</div>
+                <div id="playerList" style="max-height:300px; overflow-y:auto"></div>
             </div>
 
             <div class="card">
@@ -267,6 +276,7 @@
         $('createTourneyBtn').onclick = createTournament;
         $('addPlayerBtn').onclick = addPlayer;
         $('addExistingBtn').onclick = addExistingPlayer;
+        $('deleteGlobalBtn').onclick = deletePlayerGlobally; // New
         $('generateBtn').onclick = generateSchedule;
         $('refreshBtn').onclick = refreshData;
         $('autoCheckBtn').onclick = autoCheckResults;
@@ -318,7 +328,7 @@
             sel.innerHTML = '<option value="">-- Select Existing Player --</option>' + 
                             data.map(p => `<option value="${p.id}">${p.name} (${p.tag})</option>`).join('');
         } else {
-            sel.innerHTML = '<option>No existing players found</option>';
+            sel.innerHTML = '<option>No players in DB</option>';
         }
     }
 
@@ -360,8 +370,24 @@
 
     async function addExistingPlayer() {
         const pid = $('existingPlayerSelect').value;
-        if(!pid) return setStatus("Please select a player first.");
+        if(!pid) return setStatus("Select a player first.");
         await addToTournament(pid);
+    }
+    
+    // NEW: Delete from Database
+    async function deletePlayerGlobally() {
+        const pid = $('existingPlayerSelect').value;
+        if(!pid) return setStatus("Select a player first.");
+        
+        if(!confirm("⚠️ DANGER: Permanently delete this player from the DATABASE?\nThis will remove them from ALL tournaments.")) return;
+        
+        const { error } = await supabase.from('players').delete().eq('id', pid);
+        if(error) setStatus("Error: " + error.message);
+        else {
+            setStatus("Player deleted from database.");
+            loadExistingPlayers(); // Reload dropdown
+            refreshData(); // Refresh current tourney view
+        }
     }
 
     async function addToTournament(pid) {
@@ -372,9 +398,9 @@
         } else { refreshData(); }
     }
     
-    // NEW: Remove Player Function
+    // Remove from Tournament
     window.removePlayer = async (pid) => {
-        if(!confirm("Remove this player from the tournament?")) return;
+        if(!confirm("Remove from this tournament?")) return;
         const { error } = await supabase.from('tournament_players').delete().eq('tournament_id', currentTid).eq('player_id', pid);
         if(error) setStatus("Error: " + error.message);
         else refreshData();
