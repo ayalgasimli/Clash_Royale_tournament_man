@@ -310,8 +310,14 @@
         }
         
         $('clearScheduleBtn').onclick = async () => {
-             if(confirm('Delete all matches?')) {
-                 await supabase.from('matches').delete().eq('tournament_id', currentTid);
+             if(!confirm('⚠️ Are you sure? This will delete ALL matches in this tournament.')) return;
+             
+             const { error } = await supabase.from('matches').delete().eq('tournament_id', currentTid);
+             
+             if(error) {
+                 alert("❌ DELETE FAILED: " + error.message + "\n\nFix: Go to Supabase > matches table > Disable RLS.");
+             } else {
+                 alert("✅ Schedule Cleared!");
                  refreshData();
              }
         }
