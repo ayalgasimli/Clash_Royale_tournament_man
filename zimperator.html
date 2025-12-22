@@ -22,19 +22,16 @@
     }
     .wrap{max-width:1100px;margin:0 auto;padding:20px 16px 60px}
     
-    /* --- HEADER --- */
     header{ display:flex; flex-wrap:wrap; gap:20px; align-items:flex-end; justify-content:space-between; margin-bottom:24px; padding-bottom:20px; border-bottom:1px solid var(--line); }
     h1{margin:0;font-size:28px; background: linear-gradient(to right, #fff, #a8b0d6); -webkit-background-clip: text; -webkit-text-fill-color: transparent;}
     .pill{ background:rgba(255,255,255,0.05); padding:8px 16px; border-radius:30px; border:1px solid var(--line); font-size:13px; display:inline-flex; align-items:center; gap:8px;}
     
-    /* --- LAYOUT --- */
     .grid{ display:grid; grid-template-columns: 340px 1fr; gap:20px; }
     @media (max-width: 900px){ .grid{grid-template-columns:1fr} }
     
     .card{ background:var(--card); border:1px solid var(--line); border-radius:var(--radius); padding:20px; height:100%; }
     .card h2{ margin:0 0 15px; font-size:12px; text-transform:uppercase; letter-spacing:1px; color:var(--muted); }
     
-    /* --- INPUTS --- */
     .row{display:flex; gap:10px; margin-bottom:10px;}
     input, select, button{ width:100%; border-radius:8px; border:1px solid var(--line); background:rgba(0,0,0,0.3); color:white; padding:10px; outline:none; transition:0.2s; font-size:14px;}
     input:focus{ border-color:var(--accent); }
@@ -45,23 +42,23 @@
     .btn-danger{ background:rgba(255,77,109,0.1); border-color:rgba(255,77,109,0.3); color:var(--danger); }
     .btn-danger:hover{ background:var(--danger); color:white; }
 
-    /* --- LISTS --- */
+    /* Match Animation */
+    @keyframes pulse { 0%{opacity:1} 50%{opacity:0.5} 100%{opacity:1} }
+    .checking { animation: pulse 1s infinite; border-color:var(--accent2) !important; }
+
     .list-item{
         display:flex; justify-content:space-between; align-items:center;
         padding:10px; border-bottom:1px solid var(--line); font-size:14px;
     }
-    .list-item:last-child{ border-bottom:none; }
     .tag-badge{ background:rgba(0,0,0,0.4); padding:2px 6px; border-radius:4px; font-family:monospace; font-size:10px; color:var(--muted); margin-left:6px; }
     
-    /* --- STANDINGS --- */
     table{width:100%; border-collapse:collapse; font-size:14px;}
     th{text-align:left; color:var(--muted); padding:10px; border-bottom:1px solid var(--line); font-size:11px; text-transform:uppercase;}
     td{padding:10px; border-bottom:1px solid var(--line); vertical-align: middle;}
     .player-cell { display:flex; align-items:center; gap:10px; }
     .avatar-sm { width:24px; height:24px; border-radius:50%; object-fit:cover; background:#333; }
     
-    /* --- MATCHES --- */
-    .match-card{ background:rgba(0,0,0,0.2); border:1px solid var(--line); border-radius:12px; padding:12px; margin-bottom:10px; }
+    .match-card{ background:rgba(0,0,0,0.2); border:1px solid var(--line); border-radius:12px; padding:12px; margin-bottom:10px; transition:0.3s}
     .match-players{ display:flex; justify-content:space-between; align-items:center; gap:10px; }
     .p-side{ flex:1; display:flex; align-items:center; gap:8px; font-size:14px; cursor:pointer; padding:4px; border-radius:6px; transition:0.2s; }
     .p-side:hover { background:rgba(255,255,255,0.05); }
@@ -70,7 +67,6 @@
     .winner-text{ color:var(--accent2); font-weight:bold; }
     .winner-text .avatar-sm { border: 2px solid var(--accent2); }
 
-    /* --- MODAL (PROFILE) --- */
     .modal-overlay{ position:fixed; inset:0; background:rgba(0,0,0,0.8); backdrop-filter:blur(5px); display:flex; align-items:center; justify-content:center; z-index:100; opacity:0; pointer-events:none; transition:0.3s; }
     .modal-overlay.open{ opacity:1; pointer-events:all; }
     .profile-card{ background:#1c2540; border:1px solid var(--accent); width:340px; border-radius:20px; overflow:hidden; transform:scale(0.9); transition:0.3s; box-shadow: 0 0 40px rgba(124,92,255,0.2); }
@@ -85,7 +81,6 @@
     .stat-lbl{ font-size:11px; color:var(--muted); text-transform:uppercase; margin-top:4px; display:block; }
     .close-modal{ position:absolute; top:10px; right:10px; background:rgba(0,0,0,0.3); border:none; color:white; width:30px; height:30px; border-radius:50%; display:grid; place-items:center; cursor:pointer; }
     
-    /* Utilities */
     .hidden{display:none}
     .status{ margin-top:10px; font-size:13px; color:var(--accent2); min-height:20px; }
   </style>
@@ -134,7 +129,6 @@
     <div class="grid">
         
         <div style="display:flex; flex-direction:column; gap:20px;">
-            
             <div class="card">
                 <h2>1. Manage Tournament</h2>
                 <div class="row">
@@ -149,17 +143,11 @@
 
             <div class="card">
                 <h2>2. Add Players</h2>
-                <p style="font-size:12px; color:var(--muted); margin-bottom:10px;">
-                    Enter a CR Player Tag (e.g. #2P090) to auto-fetch stats.
-                </p>
-                
                 <div class="row">
                     <input id="playerTagInput" placeholder="#TAG" style="font-family:monospace">
                     <button id="addPlayerBtn">Add</button>
                 </div>
-                
-                <div id="playerList" style="margin-top:15px; max-height:300px; overflow-y:auto">
-                    </div>
+                <div id="playerList" style="margin-top:15px; max-height:300px; overflow-y:auto"></div>
             </div>
 
             <div class="card">
@@ -168,11 +156,9 @@
                 <button class="btn-danger" id="clearScheduleBtn">🗑 Clear Schedule</button>
                 <div class="status" id="statusMsg">Ready</div>
             </div>
-
         </div>
 
         <div style="display:flex; flex-direction:column; gap:20px;">
-            
             <div class="card">
                 <h2>🏆 League Standings</h2>
                 <div id="standingsContainer">
@@ -181,18 +167,19 @@
             </div>
 
             <div class="card">
-                <h2>⚔️ Match Schedule</h2>
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                    <h2>⚔️ Match Schedule</h2>
+                    <button id="autoCheckBtn" style="width:auto; font-size:12px; padding:6px 12px; background:var(--accent2); color:#000;">⚡ Auto-Check Results</button>
+                </div>
                 <div id="matchesContainer">
                     <p style="color:var(--muted); font-style:italic; padding:20px;">No schedule generated.</p>
                 </div>
             </div>
-
         </div>
     </div>
   </div>
 
   <script type="module">
-    // --- CONFIG ---
     const SUPABASE_URL = "https://izmzpnfpcdxdqwgghsyq.supabase.co";
     const SUPABASE_ANON_KEY = "sb_publishable_4kW-ZwFSbzqPkWz63jYcGw_Kldfdp7R";
 
@@ -200,70 +187,134 @@
     const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
     const $ = (id) => document.getElementById(id);
     
-    // Global State
     let currentTid = localStorage.getItem('cr_tid') || null;
     let playersCache = [];
+    const FUNCTION_URL = "http://localhost:8000"; 
 
-    // --- REAL API CONNECTION (Local Deno Server) ---
-    async function fetchClashRoyaleStats(tagInput) {
-        // This points to your local terminal running Deno
-        // Must be running: deno run --allow-net --allow-env --watch supabase/functions/clash-proxy/index.ts
-        const FUNCTION_URL = "http://localhost:8000"; 
+    // --- API & BATTLE LOGIC ---
 
+    async function callApi(payload) {
         try {
             const response = await fetch(FUNCTION_URL, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ playerTag: tagInput })
+                body: JSON.stringify(payload)
             });
-
-            if(!response.ok) {
-                const errData = await response.json().catch(() => ({}));
-                throw new Error(errData.error || "Player not found or Server is offline");
-            }
-            
-            const data = await response.json();
-            return {
-                tag: data.tag,
-                name: data.name,
-                trophies: data.trophies,
-                bestRank: data.bestRank,
-                favoriteCard: data.favoriteCard,
-                avatarUrl: data.avatarUrl
-            };
-            
+            if(!response.ok) throw new Error("API Error");
+            return await response.json();
         } catch (err) {
             console.error(err);
-            alert("Connection Error: Make sure your Deno terminal is running!\n\nDetails: " + err.message);
             throw err;
         }
     }
 
-    // --- CORE LOGIC ---
+    // --- AUTO RESULT CHECKER ---
+    async function autoCheckResults() {
+        if(!currentTid) return;
+        const btn = $('autoCheckBtn');
+        btn.disabled = true; 
+        btn.innerText = "Checking...";
+        setStatus("Scanning Battle Logs...");
+
+        try {
+            // 1. Get unfinished matches with player tags
+            const { data: matches } = await supabase
+                .from('matches')
+                .select('*, pA:player_a_id(tag), pB:player_b_id(tag)')
+                .eq('tournament_id', currentTid)
+                .is('completed', false);
+
+            if(!matches || matches.length === 0) {
+                setStatus("No unfinished matches to check.");
+                btn.disabled = false; btn.innerText = "⚡ Auto-Check Results";
+                return;
+            }
+
+            let updates = 0;
+
+            // 2. Loop through matches
+            for (const m of matches) {
+                // Skip if missing tags
+                if(!m.pA?.tag || !m.pB?.tag) continue;
+
+                // Mark visual checking state
+                const card = document.getElementById(`match-${m.id}`);
+                if(card) card.classList.add('checking');
+
+                // 3. Fetch Battle Log for Player A
+                const log = await callApi({ playerTag: m.pA.tag, mode: 'battlelog' });
+
+                // 4. Look for a battle against Player B
+                const targetTag = m.pB.tag.replace('#','');
+                const battle = log.find(b => 
+                    b.opponent[0].tag.replace('#','') === targetTag
+                );
+
+                if (battle) {
+                    // 5. Determine Winner
+                    // Team[0] is Player A, Opponent[0] is Player B
+                    const crownsA = battle.team[0].crowns;
+                    const crownsB = battle.opponent[0].crowns;
+                    
+                    let winnerId = null;
+                    if(crownsA > crownsB) winnerId = m.player_a_id;
+                    else if(crownsB > crownsA) winnerId = m.player_b_id;
+                    
+                    if(winnerId) {
+                        await supabase.from('matches').update({ winner_id: winnerId, completed: true }).eq('id', m.id);
+                        updates++;
+                    }
+                }
+                
+                // Remove visual state
+                if(card) card.classList.remove('checking');
+            }
+
+            setStatus(`Check complete. Updated ${updates} matches.`);
+            refreshData();
+
+        } catch (e) {
+            setStatus("Auto-Check Error: " + e.message);
+        } finally {
+            btn.disabled = false;
+            btn.innerText = "⚡ Auto-Check Results";
+        }
+    }
+
+    // --- INIT & LISTENERS ---
 
     async function init() {
         await loadTournaments();
         if(currentTid) await refreshData();
         
-        // Listeners
         $('createTourneyBtn').onclick = createTournament;
         $('addPlayerBtn').onclick = addPlayer;
         $('generateBtn').onclick = generateSchedule;
         $('refreshBtn').onclick = refreshData;
+        $('autoCheckBtn').onclick = autoCheckResults; // New Listener
+        
         $('tourneySelect').onchange = (e) => {
             currentTid = e.target.value;
             localStorage.setItem('cr_tid', currentTid);
             refreshData();
         }
+        
         $('deleteTourneyBtn').onclick = async () => {
              if(!currentTid) return;
-             if(confirm('Delete tournament?')) {
-                 await supabase.from('tournaments').delete().eq('id', currentTid);
-                 currentTid = null;
+             if(!confirm('Delete this tournament?\nThis deletes all matches and rankings.')) return;
+             const { error } = await supabase.from('tournaments').delete().eq('id', currentTid);
+             if(error) { alert("Delete Failed: " + error.message); } 
+             else {
+                 alert("Tournament Deleted.");
+                 currentTid = null; localStorage.removeItem('cr_tid');
                  await loadTournaments();
-                 window.location.reload();
+                 $('activeTourneyName').innerText = "None";
+                 $('playerList').innerHTML = "";
+                 $('matchesContainer').innerHTML = "";
+                 $('standingsContainer').innerHTML = "";
              }
         }
+        
         $('clearScheduleBtn').onclick = async () => {
              if(confirm('Delete all matches?')) {
                  await supabase.from('matches').delete().eq('tournament_id', currentTid);
@@ -272,18 +323,17 @@
         }
     }
 
+    // --- DATA LOADERS ---
+
     async function loadTournaments() {
         const { data } = await supabase.from('tournaments').select('*').order('created_at', { ascending:false });
         const sel = $('tourneySelect');
         if(data && data.length) {
             sel.innerHTML = data.map(t => `<option value="${t.id}">${t.name}</option>`).join('');
-            if(currentTid) {
-                const exists = data.find(t => t.id === currentTid);
-                if(exists) sel.value = currentTid;
-                else { currentTid = data[0].id; sel.value = currentTid; }
-            } else {
-                currentTid = data[0].id;
+            if(currentTid && data.find(t => t.id === currentTid)) {
                 sel.value = currentTid;
+            } else {
+                currentTid = data[0].id; sel.value = currentTid;
             }
         } else {
             sel.innerHTML = '<option>No tournaments</option>';
@@ -293,72 +343,42 @@
     async function refreshData() {
         if(!currentTid) return;
         setStatus('Loading...');
-        
-        // Update Title
         const tName = $('tourneySelect').options[$('tourneySelect').selectedIndex]?.text;
         $('activeTourneyName').innerText = tName || "None";
 
-        // 1. Get Players
-        const { data: pData } = await supabase
-            .from('tournament_players')
-            .select('player_id, players(*)')
-            .eq('tournament_id', currentTid);
-        
+        const { data: pData } = await supabase.from('tournament_players').select('player_id, players(*)').eq('tournament_id', currentTid);
         playersCache = pData ? pData.map(d => d.players) : [];
         renderPlayerList();
 
-        // 2. Get Matches
-        const { data: matches } = await supabase
-            .from('matches')
-            .select('*')
-            .eq('tournament_id', currentTid)
-            .order('round_number');
-        
+        const { data: matches } = await supabase.from('matches').select('*').eq('tournament_id', currentTid).order('round_number');
         renderMatches(matches || []);
         calculateAndRenderStandings(matches || []);
         setStatus('Ready');
     }
 
-    // --- PLAYER LOGIC ---
+    // --- PLAYERS ---
 
     async function addPlayer() {
         const input = $('playerTagInput').value.trim();
         if(!input) return;
-
         setStatus('Fetching Stats...');
-        
         try {
-            // 1. Call Real API
-            const stats = await fetchClashRoyaleStats(input);
+            // Call API via local proxy
+            const stats = await callApi({ playerTag: input });
             
-            // 2. Insert into Global Players Table
-            const { data: player, error } = await supabase
-                .from('players')
-                .upsert({ 
-                    tag: stats.tag,
-                    name: stats.name, 
-                    trophies: stats.trophies,
-                    best_rank: stats.bestRank,
-                    avatar_url: stats.avatarUrl,
-                    favorite_card: stats.favoriteCard
-                }, { onConflict: 'tag' })
-                .select()
-                .single();
+            const { data: player, error } = await supabase.from('players').upsert({ 
+                tag: stats.tag, name: stats.name, trophies: stats.trophies,
+                best_rank: stats.bestRank, avatar_url: stats.avatarUrl,
+                favorite_card: stats.favoriteCard
+            }, { onConflict: 'tag' }).select().single();
 
-            if(error) { setStatus('Error: ' + error.message); return; }
+            if(error) throw error;
 
-            // 3. Link to Tournament
-            const { error: linkErr } = await supabase
-                .from('tournament_players')
-                .insert({ tournament_id: currentTid, player_id: player.id });
+            const { error: linkErr } = await supabase.from('tournament_players').insert({ tournament_id: currentTid, player_id: player.id });
+            if(linkErr && linkErr.code !== '23505') throw linkErr;
 
-            if(linkErr) {
-                if(linkErr.code === '23505') setStatus('Player already in tournament!'); 
-                else setStatus('Error linking player');
-            } else {
-                $('playerTagInput').value = '';
-                refreshData();
-            }
+            $('playerTagInput').value = '';
+            refreshData();
         } catch (e) {
             setStatus("Failed: " + e.message);
         }
@@ -379,33 +399,24 @@
         `).join('');
     }
 
-    // --- SCHEDULE LOGIC (Round Robin) ---
+    // --- SCHEDULE ---
 
     async function generateSchedule() {
         if(playersCache.length < 2) return setStatus('Need 2+ players');
         setStatus('Generating...');
-        
         const pIds = playersCache.map(p => p.id);
-        if(pIds.length % 2 !== 0) pIds.push(null); // Bye
+        if(pIds.length % 2 !== 0) pIds.push(null);
         
         const n = pIds.length;
         const rounds = [];
-        
-        // Circle Method
         for(let r=0; r < n-1; r++) {
             for(let i=0; i < n/2; i++) {
                 const a = pIds[i];
                 const b = pIds[n-1-i];
-                if(a && b) rounds.push({ 
-                    tournament_id: currentTid, 
-                    round_number: r+1, 
-                    player_a_id: a, 
-                    player_b_id: b 
-                });
+                if(a && b) rounds.push({ tournament_id: currentTid, round_number: r+1, player_a_id: a, player_b_id: b });
             }
             pIds.splice(1, 0, pIds.pop());
         }
-
         const { error } = await supabase.from('matches').insert(rounds);
         if(!error) refreshData();
         else setStatus(error.message);
@@ -413,7 +424,6 @@
 
     function renderMatches(matches) {
         if(!matches.length) return $('matchesContainer').innerHTML = '<p class="muted">No matches.</p>';
-        
         const byRound = {};
         matches.forEach(m => {
             if(!byRound[m.round_number]) byRound[m.round_number] = [];
@@ -426,12 +436,11 @@
             byRound[r].forEach(m => {
                 const pA = playersCache.find(p => p.id === m.player_a_id) || {name:'?'};
                 const pB = playersCache.find(p => p.id === m.player_b_id) || {name:'?'};
-                
                 const winA = m.winner_id === m.player_a_id;
                 const winB = m.winner_id === m.player_b_id;
                 
                 html += `
-                <div class="match-card">
+                <div class="match-card" id="match-${m.id}">
                     <div class="match-players">
                         <div class="p-side ${winA?'winner-text':''}" onclick="setWinner('${m.id}','${m.player_a_id}')">
                             <img src="${pA.avatar_url || ''}" class="avatar-sm">
@@ -450,53 +459,30 @@
     }
 
     window.setWinner = async (mid, pid) => {
-        if(!confirm('Set winner?')) return;
+        if(!confirm('Set winner manually?')) return;
         await supabase.from('matches').update({ winner_id: pid, completed: true }).eq('id', mid);
         refreshData();
     }
 
-    // --- STANDINGS ---
-    
     function calculateAndRenderStandings(matches) {
         const stats = {};
-        playersCache.forEach(p => {
-            stats[p.id] = { ...p, w:0, l:0, pts:0, played:0 };
-        });
-
+        playersCache.forEach(p => { stats[p.id] = { ...p, w:0, l:0, pts:0, played:0 }; });
         matches.forEach(m => {
             if(m.completed && m.winner_id) {
                 const w = stats[m.winner_id];
                 const l = stats[m.player_a_id === m.winner_id ? m.player_b_id : m.player_a_id];
-                if(w && l) {
-                    w.w++; w.pts+=3; w.played++;
-                    l.l++; l.played++;
-                }
+                if(w && l) { w.w++; w.pts+=3; w.played++; l.l++; l.played++; }
             }
         });
-
         const sorted = Object.values(stats).sort((a,b) => b.pts - a.pts || b.trophies - a.trophies);
         
-        $('standingsContainer').innerHTML = `
-            <table>
-                <thead><tr><th>Rk</th><th>Player</th><th>W</th><th>L</th><th>Pts</th></tr></thead>
-                <tbody>
-                    ${sorted.map((p,i) => `
-                        <tr>
-                            <td>#${i+1}</td>
-                            <td>
-                                <div class="player-cell">
-                                    <img src="${p.avatar_url || ''}" class="avatar-sm">
-                                    <span style="cursor:pointer; font-weight:bold" onclick="openProfile('${p.id}')">${p.name}</span>
-                                </div>
-                            </td>
-                            <td>${p.w}</td>
-                            <td>${p.l}</td>
-                            <td style="color:var(--accent2); font-weight:bold">${p.pts}</td>
-                        </tr>
-                    `).join('')}
-                </tbody>
-            </table>
-        `;
+        $('standingsContainer').innerHTML = `<table><thead><tr><th>Rk</th><th>Player</th><th>W</th><th>L</th><th>Pts</th></tr></thead><tbody>
+            ${sorted.map((p,i) => `<tr>
+                <td>#${i+1}</td>
+                <td><div class="player-cell"><img src="${p.avatar_url || ''}" class="avatar-sm"><span style="cursor:pointer; font-weight:bold" onclick="openProfile('${p.id}')">${p.name}</span></div></td>
+                <td>${p.w}</td><td>${p.l}</td><td style="color:var(--accent2); font-weight:bold">${p.pts}</td>
+            </tr>`).join('')}
+        </tbody></table>`;
     }
 
     async function createTournament() {
@@ -504,32 +490,20 @@
         if(!name) return;
         const { data } = await supabase.from('tournaments').insert({name}).select().single();
         if(data) {
-            currentTid = data.id;
-            await loadTournaments();
-            $('tourneySelect').value = currentTid;
-            refreshData();
-            $('newTourneyName').value = '';
+            currentTid = data.id; await loadTournaments(); $('tourneySelect').value = currentTid; refreshData(); $('newTourneyName').value = '';
         }
     }
 
     function setStatus(msg) { $('statusMsg').innerText = msg; }
-    
     window.openProfile = (pid) => {
         const p = playersCache.find(x => x.id == pid);
         if(!p) return;
-        $('pmName').innerText = p.name;
-        $('pmTag').innerText = p.tag || "#UNKNOWN";
-        $('pmTrophies').innerText = p.trophies;
-        $('pmRank').innerText = p.best_rank > 0 ? `#${p.best_rank}` : "Unranked";
-        $('pmCard').innerText = p.favorite_card || "-";
-        $('pmImg').src = p.avatar_url;
+        $('pmName').innerText = p.name; $('pmTag').innerText = p.tag || "#UNKNOWN";
+        $('pmTrophies').innerText = p.trophies; $('pmRank').innerText = p.best_rank > 0 ? `#${p.best_rank}` : "Unranked";
+        $('pmCard').innerText = p.favorite_card || "-"; $('pmImg').src = p.avatar_url;
         $('profileModal').classList.add('open');
     }
-    
-    window.closeProfile = () => {
-        $('profileModal').classList.remove('open');
-    }
-
+    window.closeProfile = () => $('profileModal').classList.remove('open');
     init();
   </script>
 </body>
