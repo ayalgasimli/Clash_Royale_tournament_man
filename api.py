@@ -1,19 +1,41 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 import requests
+import os
+import time
 
 app = Flask(__name__)
 CORS(app)
 
 # --- CONFIGURATION ---
-# YOUR KEY from the Screenshot (Confirmed Correct)
-CR_API_KEY = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzUxMiIsImtpZCI6IjI4YTMxOGY3LTAwMDAtYTFlYi03ZmExLTJjNzQzM2M2Y2NhNSJ9.eyJpc3MiOiJzdXBlcmNlbGwiLCJhdWQiOiJzdXBlcmNlbGw6Z2FtZWFwaSIsImp0aSI6IjY5ODE1YTI3LWU3ZjgtNGE0Ny1hNDU5LTczYTQ0YjMwYzI0MyIsImlhdCI6MTc2ODMwODk5NCwic3ViIjoiZGV2ZWxvcGVyLzgxM2FkZGQyLTJjYTgtMjY0Yy1mMTM3LWQ4MmMxY2EzYzgxYiIsInNjb3BlcyI6WyJyb3lhbGUiXSwibGltaXRzIjpbeyJ0aWVyIjoiZGV2ZWxvcGVyL3NpbHZlciIsInR5cGUiOiJ0aHJvdHRsaW5nIn0seyJjaWRycyI6WyIxMDQuMjguMjI0LjE3MyJdLCJ0eXBlIjoiY2xpZW50In1dfQ.A0sYJPDn0iRcSRB2keXlJO3qHOB9cP6qgfpugjP56v7SyTfsNd2u3_FINXACzS58I8P5EzUkWsuq4RWX3qIFYQ"
+# Load API key from environment variable
+CR_API_KEY = os.environ.get("CR_API_KEY")
+
+if not CR_API_KEY:
+    print("⚠️  WARNING: CR_API_KEY environment variable is not set!")
+    print("   Set it with: set CR_API_KEY=your_api_key (Windows)")
+    print("   Or: export CR_API_KEY=your_api_key (Linux/Mac)")
 
 BASE_URL = "https://api.clashroyale.com/v1"
 
+# Rate limiting: track last request time
+last_request_time = 0
+MIN_REQUEST_INTERVAL = 0.5  # seconds between requests
+
 @app.route('/', methods=['POST'])
 def proxy():
+    global last_request_time
+    
+    # Check if API key is configured
+    if not CR_API_KEY:
+        return jsonify({"error": "Server misconfigured: CR_API_KEY not set"}), 500
+    
     try:
+        # Rate limiting
+        elapsed = time.time() - last_request_time
+        if elapsed < MIN_REQUEST_INTERVAL:
+            time.sleep(MIN_REQUEST_INTERVAL - elapsed)
+        
         data = request.json
         # Clean the tag: remove # and spaces, ensure uppercase
         raw_tag = data.get('playerTag', '')
@@ -34,8 +56,17 @@ def proxy():
 
         # Send request to Clash Royale
         response = requests.get(url, headers=headers)
+        last_request_time = time.time()
         
         # ERROR HANDLING
+        if response.status_code == 403:
+            print("❌ API Key rejected - check if IP is whitelisted")
+            return jsonify({"error": "API key IP mismatch. Generate a new key for your current IP."}), 403
+        
+        if response.status_code == 429:
+            print("❌ Rate limited by Clash Royale API")
+            return jsonify({"error": "Rate limited. Please wait a moment."}), 429
+            
         if response.status_code != 200:
             print(f"❌ CR API Error {response.status_code}: {response.text}")
             return jsonify(response.json()), response.status_code
@@ -64,5 +95,9 @@ def proxy():
 
 if __name__ == '__main__':
     print("⚔️  Clash Royale API Proxy running on port 8000...")
+    if CR_API_KEY:
+        print("✅ API Key loaded from environment")
+    else:
+        print("❌ No API key - requests will fail!")
     # host='0.0.0.0' fixes some local connection issues
     app.run(host='0.0.0.0', port=8000)

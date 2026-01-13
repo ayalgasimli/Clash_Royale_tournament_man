@@ -1,56 +1,75 @@
-#Clash Royale Tournament Manager
+# Clash Royale Tournament Manager
 
 A web-based tool designed to organize, manage, and display Clash Royale tournaments easily. This project provides a public-facing dashboard for players to view standings and a secured admin panel for organizers to update scores in real-time.
 
 ## Features
 
 * **Public Dashboard (`index.html`):** A clean interface for players and spectators to view the current tournament bracket, match schedules, and leaderboards.
-* **Admin Panel (`zimperator.html`):** A restricted control panel where tournament organizers can:
+* **Admin Panel (`zimperator.html`):** A PIN-protected control panel where tournament organizers can:
     * Add or remove players.
     * Update match scores.
-    * Advance winners to the next round.
+    * Auto-check battle results from the CR API.
+    * Configure API server URL for deployment.
 * **Responsive Design:** Works on desktop and mobile for easy access during tournaments.
 
 ## 🛠️ Tech Stack
 
 * **Frontend:** HTML5, CSS3, JavaScript (Vanilla)
-* **Hosting:** Compatible with GitHub Pages, Vercel, or any static hosting.
-* **No Database Required:** Uses local storage or simple JSON handling (depending on specific implementation) for lightweight usage.
+* **Backend:** Python Flask API proxy for Clash Royale API
+* **Database:** Supabase (PostgreSQL)
+* **Hosting:** Compatible with GitHub Pages (frontend), any Python host for API.
 
-## 💻 How to Run Locally
+## 💻 Setup Instructions
 
-Since this is a static project, you don't need `npm` or complicated installations. You just need a simple local server.
+### 1. Get a Clash Royale API Key
 
-### Option 1: Using Python (Recommended)
-If you have Python installed (Mac/Linux/Windows):
+1. Go to [developer.clashroyale.com](https://developer.clashroyale.com)
+2. Create an account and generate an API key
+3. **Important:** Whitelist your current IP address when generating the key
 
-1.  Clone the repository:
-    ```bash
-    git clone [https://github.com/ayalgasimli/cr-tournament.git](https://github.com/ayalgasimli/cr-tournament.git)
-    cd cr-tournament
-    ```
-2.  Start a simple HTTP server:
-    ```bash
-    python3 -m http.server
-    ```
-3.  Open your browser to the URL shown (usually `http://localhost:8000`).
+### 2. Set Up Environment Variables
 
-### Option 2: Using VS Code Live Server
-1.  Open the project folder in **VS Code**.
-2.  Install the **"Live Server"** extension.
-3.  Right-click `index.html` and select **"Open with Live Server"**.
+Copy the example file and add your API key:
 
-## ☁️ How to Run in GitHub Codespaces
+```bash
+# Windows (Command Prompt)
+set CR_API_KEY=your_api_key_here
 
-1.  Go to the repository page.
-2.  Click **Code** > **Codespaces** > **Create codespace on main**.
-3.  In the terminal, run:
-    ```bash
-    python3 -m http.server
-    ```
-4.  Click **"Open in Browser"** when the popup appears.
-    * **Public View:** `...app.github.dev/index.html`
-    * **Admin View:** `...app.github.dev/admin.html` (Append `/admin.html` to the URL manually).
+# Windows (PowerShell)
+$env:CR_API_KEY="your_api_key_here"
+
+# Linux/Mac
+export CR_API_KEY=your_api_key_here
+```
+
+### 3. Run the API Server
+
+```bash
+pip install flask flask-cors requests
+python api.py
+```
+
+### 4. Serve the Frontend
+
+Using Python:
+```bash
+python -m http.server 3000
+```
+
+Or use VS Code Live Server extension.
+
+### 5. Access the Application
+
+* **Public Dashboard:** `http://localhost:3000/index.html`
+* **Admin Panel:** `http://localhost:3000/zimperator.html`
+  * First visit: Set a PIN (minimum 4 digits)
+  * Subsequent visits: Enter your PIN to access
+
+## ⚙️ Admin Settings
+
+Click the ⚙️ button in the bottom-right corner to:
+* Change the API server URL (for deployment)
+* Reset your admin PIN
 
 ## 📸 Screenshots
 
@@ -63,4 +82,5 @@ If you have Python installed (Mac/Linux/Windows):
 * Student at Bilkent University (CTIS)
 
 ---
-*Created for the love of Clash Royale.*(this is readme content is AI genareted, but works ig so idc)
+*Created for the love of Clash Royale.*
+

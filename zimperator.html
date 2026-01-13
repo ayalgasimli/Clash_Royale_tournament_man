@@ -1,474 +1,1009 @@
 <!doctype html>
 <html lang="en">
+
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>CR Tournament Manager Pro</title>
-  <style>
-    :root{
-      --bg:#0b1020; --card:#161f3a; --text:#e9eeff; --muted:#94a3b8;
-      --line:rgba(255,255,255,.08); --accent:#7c5cff; --accent2:#2ee59d;
-      --danger:#ff4d6d; --warn:#ffcc00; --gold: #ffd700;
-      --shadow: 0 12px 30px rgba(0,0,0,.35); --radius:16px;
-    }
-    *{box-sizing:border-box}
-    body{
-      margin:0; font-family: ui-sans-serif, system-ui, -apple-system, sans-serif;
-      background: var(--bg); color:var(--text);
-      background-image: 
-        radial-gradient(at 0% 0%, rgba(124,92,255,0.15) 0px, transparent 50%),
-        radial-gradient(at 100% 100%, rgba(46,229,157,0.1) 0px, transparent 50%);
-      background-attachment: fixed;
-    }
-    .wrap{max-width:1100px;margin:0 auto;padding:20px 16px 60px}
-    
-    header{ display:flex; flex-wrap:wrap; gap:20px; align-items:flex-end; justify-content:space-between; margin-bottom:24px; padding-bottom:20px; border-bottom:1px solid var(--line); }
-    h1{margin:0;font-size:28px; background: linear-gradient(to right, #fff, #a8b0d6); -webkit-background-clip: text; -webkit-text-fill-color: transparent;}
-    .pill{ background:rgba(255,255,255,0.05); padding:8px 16px; border-radius:30px; border:1px solid var(--line); font-size:13px; display:inline-flex; align-items:center; gap:8px;}
-    
-    .grid{ display:grid; grid-template-columns: 340px 1fr; gap:20px; }
-    @media (max-width: 900px){ .grid{grid-template-columns:1fr} }
-    
-    .card{ background:var(--card); border:1px solid var(--line); border-radius:var(--radius); padding:20px; height:100%; }
-    .card h2{ margin:0 0 15px; font-size:12px; text-transform:uppercase; letter-spacing:1px; color:var(--muted); }
-    
-    .row{display:flex; gap:10px; margin-bottom:10px;}
-    input, select, button{ width:100%; border-radius:8px; border:1px solid var(--line); background:rgba(0,0,0,0.3); color:white; padding:10px; outline:none; transition:0.2s; font-size:14px;}
-    input:focus{ border-color:var(--accent); }
-    button{ cursor:pointer; background:var(--accent); border-color:var(--accent); font-weight:600; }
-    button:hover{ filter:brightness(1.2); transform:translateY(-1px); }
-    .btn-ghost{ background:transparent; border-color:var(--line); color:var(--muted); }
-    .btn-ghost:hover{ color:white; border-color:white; }
-    .btn-danger{ background:rgba(255,77,109,0.1); border-color:rgba(255,77,109,0.3); color:var(--danger); }
-    .btn-danger:hover{ background:var(--danger); color:white; }
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>CR Tournament Manager Pro</title>
+    <style>
+        :root {
+            --bg: #0b1020;
+            --card: #161f3a;
+            --text: #e9eeff;
+            --muted: #94a3b8;
+            --line: rgba(255, 255, 255, .08);
+            --accent: #7c5cff;
+            --accent2: #2ee59d;
+            --danger: #ff4d6d;
+            --warn: #ffcc00;
+            --gold: #ffd700;
+            --shadow: 0 12px 30px rgba(0, 0, 0, .35);
+            --radius: 16px;
+        }
 
-    @keyframes pulse { 0%{opacity:1} 50%{opacity:0.5} 100%{opacity:1} }
-    .checking { animation: pulse 1s infinite; border-color:var(--accent2) !important; }
+        * {
+            box-sizing: border-box
+        }
 
-    .list-item{
-        display:flex; justify-content:space-between; align-items:center;
-        padding:10px; border-bottom:1px solid var(--line); font-size:14px;
-    }
-    .tag-badge{ background:rgba(0,0,0,0.4); padding:2px 6px; border-radius:4px; font-family:monospace; font-size:10px; color:var(--muted); margin-left:6px; }
-    
-    table{width:100%; border-collapse:collapse; font-size:14px;}
-    th{text-align:left; color:var(--muted); padding:10px; border-bottom:1px solid var(--line); font-size:11px; text-transform:uppercase;}
-    td{padding:10px; border-bottom:1px solid var(--line); vertical-align: middle;}
-    .player-cell { display:flex; align-items:center; gap:10px; }
-    .avatar-sm { width:24px; height:24px; border-radius:50%; object-fit:cover; background:#333; }
-    
-    /* Matches & Round Header */
-    .round-header {
-        display:flex; justify-content:space-between; align-items:center;
-        margin-top:20px; margin-bottom:10px;
-        padding-bottom:5px; border-bottom:1px solid var(--line);
-    }
-    .r-title { font-size:12px; color:var(--muted); font-weight:bold; letter-spacing:1px; }
-    .btn-xs { width:auto; padding:4px 10px; font-size:11px; background:var(--accent2); color:black; border:none; }
+        body {
+            margin: 0;
+            font-family: ui-sans-serif, system-ui, -apple-system, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            background-image:
+                radial-gradient(at 0% 0%, rgba(124, 92, 255, 0.15) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(46, 229, 157, 0.1) 0px, transparent 50%);
+            background-attachment: fixed;
+        }
 
-    .match-card{ background:rgba(0,0,0,0.2); border:1px solid var(--line); border-radius:12px; padding:12px; margin-bottom:10px; transition:0.3s}
-    .match-players{ display:flex; justify-content:space-between; align-items:center; gap:10px; }
-    .p-side{ flex:1; display:flex; align-items:center; gap:8px; font-size:14px; cursor:pointer; padding:4px; border-radius:6px; transition:0.2s; }
-    .p-side:hover { background:rgba(255,255,255,0.05); }
-    .p-right{ justify-content:flex-end; text-align:right; flex-direction: row-reverse;}
-    .vs-badge{ font-weight:bold; color:var(--muted); font-size:12px; }
-    .winner-text{ color:var(--accent2); font-weight:bold; }
-    .winner-text .avatar-sm { border: 2px solid var(--accent2); }
+        .wrap {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 20px 16px 60px
+        }
 
-    .modal-overlay{ position:fixed; inset:0; background:rgba(0,0,0,0.8); backdrop-filter:blur(5px); display:flex; align-items:center; justify-content:center; z-index:100; opacity:0; pointer-events:none; transition:0.3s; }
-    .modal-overlay.open{ opacity:1; pointer-events:all; }
-    .profile-card{ background:#1c2540; border:1px solid var(--accent); width:340px; border-radius:20px; overflow:hidden; transform:scale(0.9); transition:0.3s; box-shadow: 0 0 40px rgba(124,92,255,0.2); }
-    .modal-overlay.open .profile-card{ transform:scale(1); }
-    .pc-header{ background:linear-gradient(45deg, var(--accent), #5035b4); padding:20px; text-align:center; position:relative; }
-    .pc-avatar{ width:80px; height:80px; border-radius:50%; border:3px solid white; background:#333; margin:0 auto 10px; object-fit:cover; display:block;}
-    .pc-name{ font-size:22px; font-weight:bold; color:white; margin:0; }
-    .pc-tag{ background:rgba(0,0,0,0.3); color:rgba(255,255,255,0.8); padding:4px 10px; border-radius:12px; font-family:monospace; font-size:12px; margin-top:5px; display:inline-block; }
-    .pc-stats{ padding:20px; display:grid; grid-template-columns:1fr 1fr; gap:15px; }
-    .stat-box{ background:rgba(0,0,0,0.2); padding:10px; border-radius:10px; text-align:center; border:1px solid var(--line); }
-    .stat-val{ font-size:18px; font-weight:bold; color:var(--text); display:block; }
-    .stat-lbl{ font-size:11px; color:var(--muted); text-transform:uppercase; margin-top:4px; display:block; }
-    .close-modal{ position:absolute; top:10px; right:10px; background:rgba(0,0,0,0.3); border:none; color:white; width:30px; height:30px; border-radius:50%; display:grid; place-items:center; cursor:pointer; }
-    
-    .hidden{display:none}
-    .status{ margin-top:10px; font-size:13px; color:var(--accent2); min-height:20px; }
-    
-    .sep { border-top: 1px solid var(--line); margin: 15px 0; position:relative; text-align:center; }
-    .sep span { background: var(--card); padding: 0 10px; font-size: 10px; color: var(--muted); position: relative; top: -8px; }
-  </style>
+        header {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            align-items: flex-end;
+            justify-content: space-between;
+            margin-bottom: 24px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid var(--line);
+        }
+
+        h1 {
+            margin: 0;
+            font-size: 28px;
+            background: linear-gradient(to right, #fff, #a8b0d6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .pill {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 8px 16px;
+            border-radius: 30px;
+            border: 1px solid var(--line);
+            font-size: 13px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: 340px 1fr;
+            gap: 20px;
+        }
+
+        @media (max-width: 900px) {
+            .grid {
+                grid-template-columns: 1fr
+            }
+        }
+
+        .card {
+            background: var(--card);
+            border: 1px solid var(--line);
+            border-radius: var(--radius);
+            padding: 20px;
+            height: 100%;
+        }
+
+        .card h2 {
+            margin: 0 0 15px;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--muted);
+        }
+
+        .row {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        input,
+        select,
+        button {
+            width: 100%;
+            border-radius: 8px;
+            border: 1px solid var(--line);
+            background: rgba(0, 0, 0, 0.3);
+            color: white;
+            padding: 10px;
+            outline: none;
+            transition: 0.2s;
+            font-size: 14px;
+        }
+
+        input:focus {
+            border-color: var(--accent);
+        }
+
+        button {
+            cursor: pointer;
+            background: var(--accent);
+            border-color: var(--accent);
+            font-weight: 600;
+        }
+
+        button:hover {
+            filter: brightness(1.2);
+            transform: translateY(-1px);
+        }
+
+        .btn-ghost {
+            background: transparent;
+            border-color: var(--line);
+            color: var(--muted);
+        }
+
+        .btn-ghost:hover {
+            color: white;
+            border-color: white;
+        }
+
+        .btn-danger {
+            background: rgba(255, 77, 109, 0.1);
+            border-color: rgba(255, 77, 109, 0.3);
+            color: var(--danger);
+        }
+
+        .btn-danger:hover {
+            background: var(--danger);
+            color: white;
+        }
+
+        @keyframes pulse {
+            0% {
+                opacity: 1
+            }
+
+            50% {
+                opacity: 0.5
+            }
+
+            100% {
+                opacity: 1
+            }
+        }
+
+        .checking {
+            animation: pulse 1s infinite;
+            border-color: var(--accent2) !important;
+        }
+
+        .list-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            border-bottom: 1px solid var(--line);
+            font-size: 14px;
+        }
+
+        .tag-badge {
+            background: rgba(0, 0, 0, 0.4);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 10px;
+            color: var(--muted);
+            margin-left: 6px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        th {
+            text-align: left;
+            color: var(--muted);
+            padding: 10px;
+            border-bottom: 1px solid var(--line);
+            font-size: 11px;
+            text-transform: uppercase;
+        }
+
+        td {
+            padding: 10px;
+            border-bottom: 1px solid var(--line);
+            vertical-align: middle;
+        }
+
+        .player-cell {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .avatar-sm {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            object-fit: cover;
+            background: #333;
+        }
+
+        /* Matches & Round Header */
+        .round-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 20px;
+            margin-bottom: 10px;
+            padding-bottom: 5px;
+            border-bottom: 1px solid var(--line);
+        }
+
+        .r-title {
+            font-size: 12px;
+            color: var(--muted);
+            font-weight: bold;
+            letter-spacing: 1px;
+        }
+
+        .btn-xs {
+            width: auto;
+            padding: 4px 10px;
+            font-size: 11px;
+            background: var(--accent2);
+            color: black;
+            border: none;
+        }
+
+        .match-card {
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid var(--line);
+            border-radius: 12px;
+            padding: 12px;
+            margin-bottom: 10px;
+            transition: 0.3s
+        }
+
+        .match-players {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .p-side {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            cursor: pointer;
+            padding: 4px;
+            border-radius: 6px;
+            transition: 0.2s;
+        }
+
+        .p-side:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .p-right {
+            justify-content: flex-end;
+            text-align: right;
+            flex-direction: row-reverse;
+        }
+
+        .vs-badge {
+            font-weight: bold;
+            color: var(--muted);
+            font-size: 12px;
+        }
+
+        .winner-text {
+            color: var(--accent2);
+            font-weight: bold;
+        }
+
+        .winner-text .avatar-sm {
+            border: 2px solid var(--accent2);
+        }
+
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(5px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            opacity: 0;
+            pointer-events: none;
+            transition: 0.3s;
+        }
+
+        .modal-overlay.open {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .profile-card {
+            background: #1c2540;
+            border: 1px solid var(--accent);
+            width: 340px;
+            border-radius: 20px;
+            overflow: hidden;
+            transform: scale(0.9);
+            transition: 0.3s;
+            box-shadow: 0 0 40px rgba(124, 92, 255, 0.2);
+        }
+
+        .modal-overlay.open .profile-card {
+            transform: scale(1);
+        }
+
+        .pc-header {
+            background: linear-gradient(45deg, var(--accent), #5035b4);
+            padding: 20px;
+            text-align: center;
+            position: relative;
+        }
+
+        .pc-avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            border: 3px solid white;
+            background: #333;
+            margin: 0 auto 10px;
+            object-fit: cover;
+            display: block;
+        }
+
+        .pc-name {
+            font-size: 22px;
+            font-weight: bold;
+            color: white;
+            margin: 0;
+        }
+
+        .pc-tag {
+            background: rgba(0, 0, 0, 0.3);
+            color: rgba(255, 255, 255, 0.8);
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-family: monospace;
+            font-size: 12px;
+            margin-top: 5px;
+            display: inline-block;
+        }
+
+        .pc-stats {
+            padding: 20px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .stat-box {
+            background: rgba(0, 0, 0, 0.2);
+            padding: 10px;
+            border-radius: 10px;
+            text-align: center;
+            border: 1px solid var(--line);
+        }
+
+        .stat-val {
+            font-size: 18px;
+            font-weight: bold;
+            color: var(--text);
+            display: block;
+        }
+
+        .stat-lbl {
+            font-size: 11px;
+            color: var(--muted);
+            text-transform: uppercase;
+            margin-top: 4px;
+            display: block;
+        }
+
+        .close-modal {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(0, 0, 0, 0.3);
+            border: none;
+            color: white;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: grid;
+            place-items: center;
+            cursor: pointer;
+        }
+
+        .hidden {
+            display: none
+        }
+
+        .status {
+            margin-top: 10px;
+            font-size: 13px;
+            color: var(--accent2);
+            min-height: 20px;
+        }
+
+        .sep {
+            border-top: 1px solid var(--line);
+            margin: 15px 0;
+            position: relative;
+            text-align: center;
+        }
+
+        .sep span {
+            background: var(--card);
+            padding: 0 10px;
+            font-size: 10px;
+            color: var(--muted);
+            position: relative;
+            top: -8px;
+        }
+
+        /* Auth Overlay */
+        .auth-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 999;
+            background: var(--bg);
+            background-image:
+                radial-gradient(at 0% 0%, rgba(124, 92, 255, 0.2) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(46, 229, 157, 0.15) 0px, transparent 50%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .auth-box {
+            background: var(--card);
+            border: 1px solid var(--line);
+            border-radius: 20px;
+            padding: 40px;
+            text-align: center;
+            max-width: 360px;
+        }
+
+        .auth-box h2 {
+            margin: 0 0 10px;
+            font-size: 24px;
+            color: white;
+        }
+
+        .auth-box p {
+            color: var(--muted);
+            font-size: 14px;
+            margin-bottom: 20px;
+        }
+
+        .auth-box input {
+            text-align: center;
+            font-size: 24px;
+            letter-spacing: 8px;
+            padding: 15px;
+        }
+
+        .auth-error {
+            color: var(--danger);
+            font-size: 12px;
+            margin-top: 10px;
+            min-height: 18px;
+        }
+
+        .settings-btn {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: var(--card);
+            border: 1px solid var(--line);
+            color: var(--muted);
+            font-size: 20px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 50;
+        }
+
+        .settings-btn:hover {
+            border-color: var(--accent);
+            color: white;
+        }
+    </style>
 </head>
+
 <body>
 
-  <div class="modal-overlay" id="profileModal">
-    <div class="profile-card">
-        <div class="pc-header">
-            <button class="close-modal" onclick="closeProfile()">✕</button>
-            <img src="" class="pc-avatar" id="pmImg">
-            <h3 class="pc-name" id="pmName">Name</h3>
-            <span class="pc-tag" id="pmTag">#TAG</span>
-        </div>
-        <div class="pc-stats">
-            <div class="stat-box">
-                <span class="stat-val" id="pmTrophies">0</span>
-                <span class="stat-lbl">🏆 Trophies</span>
-            </div>
-            <div class="stat-box">
-                <span class="stat-val" id="pmRank">Unranked</span>
-                <span class="stat-lbl">Best Rank</span>
-            </div>
-            <div class="stat-box" style="grid-column:span 2">
-                <span class="stat-val" id="pmCard" style="font-size:14px; color:var(--accent)">-</span>
-                <span class="stat-lbl">Favorite Card</span>
+    <!-- AUTH OVERLAY -->
+    <div class="auth-overlay" id="authOverlay">
+        <div class="auth-box">
+            <h2>🔐 Admin Access</h2>
+            <p>Enter PIN to continue</p>
+            <input type="password" id="pinInput" maxlength="6" placeholder="••••••" autocomplete="off">
+            <button style="margin-top:15px" onclick="checkPin()">Unlock</button>
+            <div class="auth-error" id="authError"></div>
+            <div style="margin-top:20px; font-size:11px; color:var(--muted)">
+                First time? Enter a new PIN to set it.
             </div>
         </div>
     </div>
-  </div>
 
-  <div class="wrap">
-    <header>
-      <div>
-        <h1>👑 Zimpionat</h1>
-        <div class="pill">
-            <span style="color:var(--muted)">Active:</span> 
-            <b id="activeTourneyName">None</b>
+    <!-- SETTINGS MODAL -->
+    <div class="modal-overlay" id="settingsModal">
+        <div class="profile-card" style="width:400px">
+            <div class="pc-header" style="background:linear-gradient(45deg, #333, #555)">
+                <button class="close-modal" onclick="closeSettings()">✕</button>
+                <h3 class="pc-name">⚙️ Settings</h3>
+            </div>
+            <div style="padding:20px">
+                <label style="font-size:12px; color:var(--muted); text-transform:uppercase">API Server URL</label>
+                <input id="apiUrlInput" style="margin-top:8px" placeholder="http://localhost:8000">
+                <p style="font-size:11px; color:var(--muted); margin-top:8px">Change this if your API is hosted
+                    elsewhere</p>
+                <button style="margin-top:15px" onclick="saveSettings()">Save Settings</button>
+                <button class="btn-danger" style="margin-top:10px" onclick="resetAuth()">🔓 Reset PIN</button>
+            </div>
         </div>
-      </div>
-      <div>
-        <button class="btn-ghost" id="refreshBtn">↻ Refresh Data</button>
-      </div>
-    </header>
+    </div>
 
-    <div class="grid">
-        
-        <div style="display:flex; flex-direction:column; gap:20px;">
-            <div class="card">
-                <h2>1. Manage Tournament</h2>
-                <div class="row">
-                    <select id="tourneySelect"><option>Loading...</option></select>
-                </div>
-                <div class="row">
-                    <input id="newTourneyName" placeholder="New Tournament Name...">
-                    <button style="width:auto" id="createTourneyBtn">+</button>
-                </div>
-                <button class="btn-danger" id="deleteTourneyBtn" style="margin-top:10px;">Delete Selected</button>
+    <!-- SETTINGS BUTTON -->
+    <button class="settings-btn" id="settingsBtn" onclick="openSettings()">⚙️</button>
+
+    <div class="modal-overlay" id="profileModal">
+        <div class="profile-card">
+            <div class="pc-header">
+                <button class="close-modal" onclick="closeProfile()">✕</button>
+                <img src="" class="pc-avatar" id="pmImg">
+                <h3 class="pc-name" id="pmName">Name</h3>
+                <span class="pc-tag" id="pmTag">#TAG</span>
             </div>
-
-            <div class="card">
-                <h2>2. Manage Players</h2>
-                
-                <p style="font-size:11px; color:var(--muted); margin-bottom:5px">DATABASE</p>
-                <div class="row">
-                    <select id="existingPlayerSelect" style="flex:1">
-                        <option value="">Loading...</option>
-                    </select>
+            <div class="pc-stats">
+                <div class="stat-box">
+                    <span class="stat-val" id="pmTrophies">0</span>
+                    <span class="stat-lbl">🏆 Trophies</span>
                 </div>
-                <div class="row">
-                    <button id="addExistingBtn" style="background:var(--card); border-color:var(--muted)">Add to Tourney</button>
-                    <button id="deleteGlobalBtn" class="btn-danger">Delete from DB</button>
+                <div class="stat-box">
+                    <span class="stat-val" id="pmRank">Unranked</span>
+                    <span class="stat-lbl">Best Rank</span>
                 </div>
-
-                <div class="sep"><span>OR FETCH NEW</span></div>
-
-                <div class="row">
-                    <input id="playerTagInput" placeholder="#TAG" style="font-family:monospace">
-                    <button id="addPlayerBtn">Fetch</button>
-                </div>
-                
-                <div style="font-size:11px; color:var(--muted); margin:15px 0 5px">IN THIS TOURNAMENT</div>
-                <div id="playerList" style="max-height:300px; overflow-y:auto"></div>
-            </div>
-
-            <div class="card">
-                <h2>3. Actions</h2>
-                <button id="generateBtn" style="margin-bottom:10px;">⚡ Generate Schedule</button>
-                <button class="btn-danger" id="clearScheduleBtn">🗑 Clear Schedule</button>
-                <div class="status" id="statusMsg">Ready</div>
-            </div>
-
-            <div class="card" style="text-align:center; border:1px solid rgba(255,255,255,0.1);">
-                <div style="font-size:10px; color:var(--muted); margin-bottom:10px; letter-spacing:1px; font-weight:bold;">POWERED BY</div>
-                <img src="sponsor.png" alt="LIT ENERGY" style="max-width:80%; height:auto; display:inline-block; border-radius:4px; opacity:0.9;">
-            </div>
-
-        </div>
-
-        <div style="display:flex; flex-direction:column; gap:20px;">
-            <div class="card">
-                <h2>🏆 League Standings</h2>
-                <div id="standingsContainer">
-                    <p style="color:var(--muted); font-style:italic; padding:20px;">No players yet.</p>
-                </div>
-            </div>
-
-            <div class="card">
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-                    <h2>⚔️ Match Schedule</h2>
-                    <button id="autoCheckBtn" style="width:auto; font-size:12px; padding:6px 12px; background:rgba(255,255,255,0.1); color:#fff; border:1px solid var(--line)">Check ALL</button>
-                </div>
-                <div id="matchesContainer">
-                    <p style="color:var(--muted); font-style:italic; padding:20px;">No schedule generated.</p>
+                <div class="stat-box" style="grid-column:span 2">
+                    <span class="stat-val" id="pmCard" style="font-size:14px; color:var(--accent)">-</span>
+                    <span class="stat-lbl">Favorite Card</span>
                 </div>
             </div>
         </div>
     </div>
-  </div>
 
-  <script type="module">
-    const SUPABASE_URL = "https://izmzpnfpcdxdqwgghsyq.supabase.co";
-    const SUPABASE_ANON_KEY = "sb_publishable_4kW-ZwFSbzqPkWz63jYcGw_Kldfdp7R";
+    <div class="wrap">
+        <header>
+            <div>
+                <h1>👑 Zimpionat</h1>
+                <div class="pill">
+                    <span style="color:var(--muted)">Active:</span>
+                    <b id="activeTourneyName">None</b>
+                </div>
+            </div>
+            <div>
+                <button class="btn-ghost" id="refreshBtn">↻ Refresh Data</button>
+            </div>
+        </header>
 
-    import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
-    const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-    const $ = (id) => document.getElementById(id);
-    
-    let currentTid = localStorage.getItem('cr_tid') || null;
-    let playersCache = [];
-    const FUNCTION_URL = "http://localhost:8000"; 
+        <div class="grid">
 
-    async function callApi(payload) {
-        try {
-            const response = await fetch(FUNCTION_URL, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(payload)
-            });
-            if(!response.ok) {
-                 const errData = await response.json().catch(() => ({}));
-                 throw new Error(errData.error || `Server Error (${response.status})`);
-            }
-            return await response.json();
-        } catch (err) {
-            console.error(err);
-            throw err;
+            <div style="display:flex; flex-direction:column; gap:20px;">
+                <div class="card">
+                    <h2>1. Manage Tournament</h2>
+                    <div class="row">
+                        <select id="tourneySelect">
+                            <option>Loading...</option>
+                        </select>
+                    </div>
+                    <div class="row">
+                        <input id="newTourneyName" placeholder="New Tournament Name...">
+                        <button style="width:auto" id="createTourneyBtn">+</button>
+                    </div>
+                    <button class="btn-danger" id="deleteTourneyBtn" style="margin-top:10px;">Delete Selected</button>
+                </div>
+
+                <div class="card">
+                    <h2>2. Manage Players</h2>
+
+                    <p style="font-size:11px; color:var(--muted); margin-bottom:5px">DATABASE</p>
+                    <div class="row">
+                        <select id="existingPlayerSelect" style="flex:1">
+                            <option value="">Loading...</option>
+                        </select>
+                    </div>
+                    <div class="row">
+                        <button id="addExistingBtn" style="background:var(--card); border-color:var(--muted)">Add to
+                            Tourney</button>
+                        <button id="deleteGlobalBtn" class="btn-danger">Delete from DB</button>
+                    </div>
+
+                    <div class="sep"><span>OR FETCH NEW</span></div>
+
+                    <div class="row">
+                        <input id="playerTagInput" placeholder="#TAG" style="font-family:monospace">
+                        <button id="addPlayerBtn">Fetch</button>
+                    </div>
+
+                    <div style="font-size:11px; color:var(--muted); margin:15px 0 5px">IN THIS TOURNAMENT</div>
+                    <div id="playerList" style="max-height:300px; overflow-y:auto"></div>
+                </div>
+
+                <div class="card">
+                    <h2>3. Actions</h2>
+                    <button id="generateBtn" style="margin-bottom:10px;">⚡ Generate Schedule</button>
+                    <button class="btn-danger" id="clearScheduleBtn">🗑 Clear Schedule</button>
+                    <div class="status" id="statusMsg">Ready</div>
+                </div>
+
+                <div class="card" style="text-align:center; border:1px solid rgba(255,255,255,0.1);">
+                    <div
+                        style="font-size:10px; color:var(--muted); margin-bottom:10px; letter-spacing:1px; font-weight:bold;">
+                        POWERED BY</div>
+                    <img src="sponsor.png" alt="LIT ENERGY"
+                        style="max-width:80%; height:auto; display:inline-block; border-radius:4px; opacity:0.9;">
+                </div>
+
+            </div>
+
+            <div style="display:flex; flex-direction:column; gap:20px;">
+                <div class="card">
+                    <h2>🏆 League Standings</h2>
+                    <div id="standingsContainer">
+                        <p style="color:var(--muted); font-style:italic; padding:20px;">No players yet.</p>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                        <h2>⚔️ Match Schedule</h2>
+                        <button id="autoCheckBtn"
+                            style="width:auto; font-size:12px; padding:6px 12px; background:rgba(255,255,255,0.1); color:#fff; border:1px solid var(--line)">Check
+                            ALL</button>
+                    </div>
+                    <div id="matchesContainer">
+                        <p style="color:var(--muted); font-style:italic; padding:20px;">No schedule generated.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        const SUPABASE_URL = "https://izmzpnfpcdxdqwgghsyq.supabase.co";
+        const SUPABASE_ANON_KEY = "sb_publishable_4kW-ZwFSbzqPkWz63jYcGw_Kldfdp7R";
+
+        import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
+        const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        const $ = (id) => document.getElementById(id);
+
+        let currentTid = localStorage.getItem('cr_tid') || null;
+        let playersCache = [];
+        const ADMIN_PIN_KEY = 'cr_admin_pin';
+        const API_URL_KEY = 'cr_api_url';
+        const DEFAULT_API_URL = "http://localhost:8000";
+
+        function getApiUrl() {
+            return localStorage.getItem(API_URL_KEY) || DEFAULT_API_URL;
         }
-    }
 
-    async function autoCheckResults(roundNum = null) {
-        if(!currentTid) return;
-        
-        const { data: tourneyData } = await supabase.from('tournaments').select('created_at').eq('id', currentTid).single();
-        if (!tourneyData) return setStatus("Error: Could not find tournament.");
-        const tournamentStart = new Date(tourneyData.created_at).getTime();
-
-        let btn;
-        if(roundNum) {
-            btn = document.getElementById(`btn-round-${roundNum}`);
-            if(btn) { btn.disabled = true; btn.innerText = "..."; }
-        } else {
-            btn = $('autoCheckBtn');
-            btn.disabled = true; btn.innerText = "Checking...";
-        }
-
-        setStatus(roundNum ? `Checking Round ${roundNum}...` : "Scanning All Matches...");
-        
-        try {
-            let query = supabase.from('matches')
-                .select('*, pA:player_a_id(tag), pB:player_b_id(tag)')
-                .eq('tournament_id', currentTid)
-                .is('completed', false);
-
-            if(roundNum) query = query.eq('round_number', roundNum);
-
-            const { data: matches } = await query;
-
-            if(!matches || matches.length === 0) {
-                setStatus("No unfinished matches found.");
-                resetBtns();
+        // --- AUTH FUNCTIONS ---
+        window.checkPin = () => {
+            const input = $('pinInput').value;
+            if (!input || input.length < 4) {
+                $('authError').innerText = 'PIN must be at least 4 digits';
                 return;
             }
-
-            let updates = 0;
-            for (const m of matches) {
-                if(!m.pA?.tag || !m.pB?.tag) continue;
-                const card = document.getElementById(`match-${m.id}`);
-                if(card) card.classList.add('checking');
-                
-                const log = await callApi({ playerTag: m.pA.tag, mode: 'battlelog' });
-                const targetTag = m.pB.tag.replace('#','');
-                
-                const battle = log.find(b => {
-                    const isOpponent = b.opponent[0].tag.replace('#','') === targetTag;
-                    
-                    const t = b.battleTime; 
-                    const battleDate = new Date(Date.UTC(
-                        t.slice(0, 4), t.slice(4, 6) - 1, t.slice(6, 8),
-                        t.slice(9, 11), t.slice(11, 13), t.slice(13, 15)
-                    ));
-                    
-                    const isNewEnough = battleDate.getTime() > tournamentStart;
-                    const validTypes = ['friendly', 'clanMate', 'tournament'];
-                    const isCorrectType = validTypes.includes(b.type);
-
-                    return isOpponent && isNewEnough && isCorrectType;
-                });
-                
-                if (battle) {
-                    const crownsA = battle.team[0].crowns;
-                    const crownsB = battle.opponent[0].crowns;
-                    let winnerId = null;
-                    if(crownsA > crownsB) winnerId = m.player_a_id;
-                    else if(crownsB > crownsA) winnerId = m.player_b_id;
-                    
-                    if(winnerId) {
-                        await supabase.from('matches').update({ winner_id: winnerId, completed: true }).eq('id', m.id);
-                        updates++;
-                    }
-                }
-                if(card) card.classList.remove('checking');
+            const storedPin = localStorage.getItem(ADMIN_PIN_KEY);
+            if (!storedPin) {
+                // First time - set the PIN
+                localStorage.setItem(ADMIN_PIN_KEY, input);
+                $('authOverlay').style.display = 'none';
+                return;
             }
-            setStatus(`Check complete. Updated ${updates} matches.`);
-            refreshData();
-        } catch (e) {
-            setStatus("Check Error: " + e.message);
-        } finally {
-            resetBtns();
-        }
-
-        function resetBtns() {
-            if(roundNum) {
-                 const b = document.getElementById(`btn-round-${roundNum}`);
-                 if(b) { b.disabled = false; b.innerText = "⚡ Check"; }
+            if (input === storedPin) {
+                $('authOverlay').style.display = 'none';
             } else {
-                 const b = $('autoCheckBtn');
-                 b.disabled = false; b.innerText = "Check ALL";
+                $('authError').innerText = 'Incorrect PIN';
+                $('pinInput').value = '';
+            }
+        };
+
+        window.openSettings = () => {
+            $('apiUrlInput').value = getApiUrl();
+            $('settingsModal').classList.add('open');
+        };
+
+        window.closeSettings = () => $('settingsModal').classList.remove('open');
+
+        window.saveSettings = () => {
+            const url = $('apiUrlInput').value.trim();
+            if (url) localStorage.setItem(API_URL_KEY, url);
+            else localStorage.removeItem(API_URL_KEY);
+            closeSettings();
+            setStatus('Settings saved! API URL: ' + getApiUrl());
+        };
+
+        window.resetAuth = () => {
+            if (confirm('Reset PIN? You will need to set a new one.')) {
+                localStorage.removeItem(ADMIN_PIN_KEY);
+                location.reload();
+            }
+        };
+
+        // Check auth on load
+        if (localStorage.getItem(ADMIN_PIN_KEY)) {
+            $('authOverlay').style.display = 'flex';
+        } else {
+            $('authOverlay').style.display = 'flex'; // Show for first-time PIN setup
+        }
+
+        $('pinInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') checkPin();
+        });
+
+        async function callApi(payload) {
+            try {
+                const response = await fetch(getApiUrl(), {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(payload)
+                });
+                if (!response.ok) {
+                    const errData = await response.json().catch(() => ({}));
+                    throw new Error(errData.error || `Server Error (${response.status})`);
+                }
+                return await response.json();
+            } catch (err) {
+                console.error(err);
+                throw err;
             }
         }
-    }
-    
-    window.autoCheckResults = autoCheckResults;
 
-    async function init() {
-        await loadTournaments();
-        await loadExistingPlayers();
-        if(currentTid) await refreshData();
-        
-        $('createTourneyBtn').onclick = createTournament;
-        $('addPlayerBtn').onclick = addPlayer;
-        $('addExistingBtn').onclick = addExistingPlayer;
-        $('deleteGlobalBtn').onclick = deletePlayerGlobally; 
-        $('generateBtn').onclick = generateSchedule;
-        $('refreshBtn').onclick = refreshData;
-        $('autoCheckBtn').onclick = () => autoCheckResults(null); 
-        
-        $('tourneySelect').onchange = (e) => {
-            currentTid = e.target.value;
-            localStorage.setItem('cr_tid', currentTid);
-            refreshData();
+        async function autoCheckResults(roundNum = null) {
+            if (!currentTid) return;
+
+            const { data: tourneyData } = await supabase.from('tournaments').select('created_at').eq('id', currentTid).single();
+            if (!tourneyData) return setStatus("Error: Could not find tournament.");
+            const tournamentStart = new Date(tourneyData.created_at).getTime();
+
+            let btn;
+            if (roundNum) {
+                btn = document.getElementById(`btn-round-${roundNum}`);
+                if (btn) { btn.disabled = true; btn.innerText = "..."; }
+            } else {
+                btn = $('autoCheckBtn');
+                btn.disabled = true; btn.innerText = "Checking...";
+            }
+
+            setStatus(roundNum ? `Checking Round ${roundNum}...` : "Scanning All Matches...");
+
+            try {
+                let query = supabase.from('matches')
+                    .select('*, pA:player_a_id(tag), pB:player_b_id(tag)')
+                    .eq('tournament_id', currentTid)
+                    .is('completed', false);
+
+                if (roundNum) query = query.eq('round_number', roundNum);
+
+                const { data: matches } = await query;
+
+                if (!matches || matches.length === 0) {
+                    setStatus("No unfinished matches found.");
+                    resetBtns();
+                    return;
+                }
+
+                let updates = 0;
+                for (const m of matches) {
+                    if (!m.pA?.tag || !m.pB?.tag) continue;
+                    const card = document.getElementById(`match-${m.id}`);
+                    if (card) card.classList.add('checking');
+
+                    const log = await callApi({ playerTag: m.pA.tag, mode: 'battlelog' });
+                    const targetTag = m.pB.tag.replace('#', '');
+
+                    const battle = log.find(b => {
+                        const isOpponent = b.opponent[0].tag.replace('#', '') === targetTag;
+
+                        const t = b.battleTime;
+                        const battleDate = new Date(Date.UTC(
+                            t.slice(0, 4), t.slice(4, 6) - 1, t.slice(6, 8),
+                            t.slice(9, 11), t.slice(11, 13), t.slice(13, 15)
+                        ));
+
+                        const isNewEnough = battleDate.getTime() > tournamentStart;
+                        const validTypes = ['friendly', 'clanMate', 'tournament'];
+                        const isCorrectType = validTypes.includes(b.type);
+
+                        return isOpponent && isNewEnough && isCorrectType;
+                    });
+
+                    if (battle) {
+                        const crownsA = battle.team[0].crowns;
+                        const crownsB = battle.opponent[0].crowns;
+                        let winnerId = null;
+                        if (crownsA > crownsB) winnerId = m.player_a_id;
+                        else if (crownsB > crownsA) winnerId = m.player_b_id;
+
+                        if (winnerId) {
+                            await supabase.from('matches').update({ winner_id: winnerId, completed: true }).eq('id', m.id);
+                            updates++;
+                        }
+                    }
+                    if (card) card.classList.remove('checking');
+                }
+                setStatus(`Check complete. Updated ${updates} matches.`);
+                refreshData();
+            } catch (e) {
+                setStatus("Check Error: " + e.message);
+            } finally {
+                resetBtns();
+            }
+
+            function resetBtns() {
+                if (roundNum) {
+                    const b = document.getElementById(`btn-round-${roundNum}`);
+                    if (b) { b.disabled = false; b.innerText = "⚡ Check"; }
+                } else {
+                    const b = $('autoCheckBtn');
+                    b.disabled = false; b.innerText = "Check ALL";
+                }
+            }
         }
-        
-        $('deleteTourneyBtn').onclick = async () => {
-             if(!currentTid) return;
-             if(!confirm('Delete this tournament?')) return;
-             const { error } = await supabase.from('tournaments').delete().eq('id', currentTid);
-             if(error) { alert("Failed: " + error.message); } 
-             else {
-                 alert("Tournament Deleted.");
-                 currentTid = null; localStorage.removeItem('cr_tid');
-                 await loadTournaments();
-                 $('activeTourneyName').innerText = "None";
-                 $('playerList').innerHTML = "";
-                 $('matchesContainer').innerHTML = "";
-                 $('standingsContainer').innerHTML = "";
-             }
+
+        window.autoCheckResults = autoCheckResults;
+
+        async function init() {
+            await loadTournaments();
+            await loadExistingPlayers();
+            if (currentTid) await refreshData();
+
+            $('createTourneyBtn').onclick = createTournament;
+            $('addPlayerBtn').onclick = addPlayer;
+            $('addExistingBtn').onclick = addExistingPlayer;
+            $('deleteGlobalBtn').onclick = deletePlayerGlobally;
+            $('generateBtn').onclick = generateSchedule;
+            $('refreshBtn').onclick = refreshData;
+            $('autoCheckBtn').onclick = () => autoCheckResults(null);
+
+            $('tourneySelect').onchange = (e) => {
+                currentTid = e.target.value;
+                localStorage.setItem('cr_tid', currentTid);
+                refreshData();
+            }
+
+            $('deleteTourneyBtn').onclick = async () => {
+                if (!currentTid) return;
+                if (!confirm('Delete this tournament?')) return;
+                const { error } = await supabase.from('tournaments').delete().eq('id', currentTid);
+                if (error) { alert("Failed: " + error.message); }
+                else {
+                    alert("Tournament Deleted.");
+                    currentTid = null; localStorage.removeItem('cr_tid');
+                    await loadTournaments();
+                    $('activeTourneyName').innerText = "None";
+                    $('playerList').innerHTML = "";
+                    $('matchesContainer').innerHTML = "";
+                    $('standingsContainer').innerHTML = "";
+                }
+            }
+
+            $('clearScheduleBtn').onclick = async () => {
+                if (confirm('Delete all matches?')) {
+                    await supabase.from('matches').delete().eq('tournament_id', currentTid);
+                    refreshData();
+                }
+            }
         }
-        
-        $('clearScheduleBtn').onclick = async () => {
-             if(confirm('Delete all matches?')) {
-                 await supabase.from('matches').delete().eq('tournament_id', currentTid);
-                 refreshData();
-             }
+
+        async function loadTournaments() {
+            const { data } = await supabase.from('tournaments').select('*').order('created_at', { ascending: false });
+            const sel = $('tourneySelect');
+            if (data && data.length) {
+                sel.innerHTML = data.map(t => `<option value="${t.id}">${t.name}</option>`).join('');
+                if (currentTid && data.find(t => t.id === currentTid)) sel.value = currentTid;
+                else { currentTid = data[0].id; sel.value = currentTid; }
+            } else { sel.innerHTML = '<option>No tournaments</option>'; }
         }
-    }
 
-    async function loadTournaments() {
-        const { data } = await supabase.from('tournaments').select('*').order('created_at', { ascending:false });
-        const sel = $('tourneySelect');
-        if(data && data.length) {
-            sel.innerHTML = data.map(t => `<option value="${t.id}">${t.name}</option>`).join('');
-            if(currentTid && data.find(t => t.id === currentTid)) sel.value = currentTid;
-            else { currentTid = data[0].id; sel.value = currentTid; }
-        } else { sel.innerHTML = '<option>No tournaments</option>'; }
-    }
-
-    async function loadExistingPlayers() {
-        const { data } = await supabase.from('players').select('id, name, tag').order('name');
-        const sel = $('existingPlayerSelect');
-        if(data && data.length) {
-            sel.innerHTML = '<option value="">-- Select Existing Player --</option>' + 
-                            data.map(p => `<option value="${p.id}">${p.name} (${p.tag})</option>`).join('');
-        } else {
-            sel.innerHTML = '<option>No existing players found</option>';
+        async function loadExistingPlayers() {
+            const { data } = await supabase.from('players').select('id, name, tag').order('name');
+            const sel = $('existingPlayerSelect');
+            if (data && data.length) {
+                sel.innerHTML = '<option value="">-- Select Existing Player --</option>' +
+                    data.map(p => `<option value="${p.id}">${p.name} (${p.tag})</option>`).join('');
+            } else {
+                sel.innerHTML = '<option>No existing players found</option>';
+            }
         }
-    }
 
-    async function refreshData() {
-        if(!currentTid) return;
-        setStatus('Loading...');
-        const tName = $('tourneySelect').options[$('tourneySelect').selectedIndex]?.text;
-        $('activeTourneyName').innerText = tName || "None";
-        const { data: pData } = await supabase.from('tournament_players').select('player_id, players(*)').eq('tournament_id', currentTid);
-        playersCache = pData ? pData.map(d => d.players) : [];
-        renderPlayerList();
-        const { data: matches } = await supabase.from('matches').select('*').eq('tournament_id', currentTid).order('round_number');
-        renderMatches(matches || []);
-        calculateAndRenderStandings(matches || []);
-        setStatus('Ready');
-    }
-
-    async function addPlayer() {
-        const input = $('playerTagInput').value.trim();
-        if(!input) return;
-        setStatus('Fetching Stats...');
-        try {
-            const stats = await callApi({ playerTag: input });
-            const { data: player, error } = await supabase.from('players').upsert({ 
-                tag: stats.tag, name: stats.name, trophies: stats.trophies,
-                best_rank: stats.bestRank, avatar_url: stats.avatarUrl,
-                favorite_card: stats.favoriteCard
-            }, { onConflict: 'tag' }).select().single();
-            if(error) throw error;
-            await addToTournament(player.id);
-            $('playerTagInput').value = '';
-            loadExistingPlayers();
-        } catch (e) {
-            setStatus("Failed: " + e.message);
+        async function refreshData() {
+            if (!currentTid) return;
+            setStatus('Loading...');
+            const tName = $('tourneySelect').options[$('tourneySelect').selectedIndex]?.text;
+            $('activeTourneyName').innerText = tName || "None";
+            const { data: pData } = await supabase.from('tournament_players').select('player_id, players(*)').eq('tournament_id', currentTid);
+            playersCache = pData ? pData.map(d => d.players) : [];
+            renderPlayerList();
+            const { data: matches } = await supabase.from('matches').select('*').eq('tournament_id', currentTid).order('round_number');
+            renderMatches(matches || []);
+            calculateAndRenderStandings(matches || []);
+            setStatus('Ready');
         }
-    }
 
-    async function addExistingPlayer() {
-        const pid = $('existingPlayerSelect').value;
-        if(!pid) return setStatus("Select a player first.");
-        await addToTournament(pid);
-    }
-    
-    async function deletePlayerGlobally() {
-        const pid = $('existingPlayerSelect').value;
-        if(!pid) return setStatus("Select a player first.");
-        if(!confirm("⚠️ DANGER: Permanently delete this player from the DATABASE?\nThis will remove them from ALL tournaments.")) return;
-        const { error } = await supabase.from('players').delete().eq('id', pid);
-        if(error) setStatus("Error: " + error.message);
-        else {
-            setStatus("Player deleted from database.");
-            loadExistingPlayers(); refreshData();
+        async function addPlayer() {
+            const input = $('playerTagInput').value.trim();
+            if (!input) return;
+            setStatus('Fetching Stats...');
+            try {
+                const stats = await callApi({ playerTag: input });
+                const { data: player, error } = await supabase.from('players').upsert({
+                    tag: stats.tag, name: stats.name, trophies: stats.trophies,
+                    best_rank: stats.bestRank, avatar_url: stats.avatarUrl,
+                    favorite_card: stats.favoriteCard
+                }, { onConflict: 'tag' }).select().single();
+                if (error) throw error;
+                await addToTournament(player.id);
+                $('playerTagInput').value = '';
+                loadExistingPlayers();
+            } catch (e) {
+                setStatus("Failed: " + e.message);
+            }
         }
-    }
 
-    async function addToTournament(pid) {
-        const { error } = await supabase.from('tournament_players').insert({ tournament_id: currentTid, player_id: pid });
-        if(error) {
-            if(error.code === '23505') setStatus("Player is already in this tournament.");
-            else setStatus("Error: " + error.message);
-        } else { refreshData(); }
-    }
-    
-    window.removePlayer = async (pid) => {
-        if(!confirm("Remove from this tournament?")) return;
-        const { error } = await supabase.from('tournament_players').delete().eq('tournament_id', currentTid).eq('player_id', pid);
-        if(error) setStatus("Error: " + error.message);
-        else refreshData();
-    }
+        async function addExistingPlayer() {
+            const pid = $('existingPlayerSelect').value;
+            if (!pid) return setStatus("Select a player first.");
+            await addToTournament(pid);
+        }
 
-    function renderPlayerList() {
-        $('playerList').innerHTML = playersCache.map(p => `
+        async function deletePlayerGlobally() {
+            const pid = $('existingPlayerSelect').value;
+            if (!pid) return setStatus("Select a player first.");
+            if (!confirm("⚠️ DANGER: Permanently delete this player from the DATABASE?\nThis will remove them from ALL tournaments.")) return;
+            const { error } = await supabase.from('players').delete().eq('id', pid);
+            if (error) setStatus("Error: " + error.message);
+            else {
+                setStatus("Player deleted from database.");
+                loadExistingPlayers(); refreshData();
+            }
+        }
+
+        async function addToTournament(pid) {
+            const { error } = await supabase.from('tournament_players').insert({ tournament_id: currentTid, player_id: pid });
+            if (error) {
+                if (error.code === '23505') setStatus("Player is already in this tournament.");
+                else setStatus("Error: " + error.message);
+            } else { refreshData(); }
+        }
+
+        window.removePlayer = async (pid) => {
+            if (!confirm("Remove from this tournament?")) return;
+            const { error } = await supabase.from('tournament_players').delete().eq('tournament_id', currentTid).eq('player_id', pid);
+            if (error) setStatus("Error: " + error.message);
+            else refreshData();
+        }
+
+        function renderPlayerList() {
+            $('playerList').innerHTML = playersCache.map(p => `
             <div class="list-item">
                 <div style="display:flex; align-items:center; gap:10px">
                     <img src="${p.avatar_url || 'https://ui-avatars.com/api/?name=?'}" class="avatar-sm">
@@ -483,123 +1018,124 @@
                 </div>
             </div>
         `).join('');
-    }
-
-    async function generateSchedule() {
-        if(playersCache.length < 2) return setStatus('Need 2+ players');
-        
-        const { count } = await supabase.from('matches').select('*', { count: 'exact', head: true }).eq('tournament_id', currentTid);
-        if(count > 0) {
-            setStatus("Schedule already exists.");
-            alert("⚠️ A schedule already exists!\n\nPlease click '🗑 Clear Schedule' first if you want to re-generate it.");
-            return;
         }
 
-        setStatus('Generating...');
-        const pIds = playersCache.map(p => p.id);
-        if(pIds.length % 2 !== 0) pIds.push(null);
-        const n = pIds.length;
-        const rounds = [];
-        for(let r=0; r < n-1; r++) {
-            for(let i=0; i < n/2; i++) {
-                const a = pIds[i];
-                const b = pIds[n-1-i];
-                if(a && b) rounds.push({ tournament_id: currentTid, round_number: r+1, player_a_id: a, player_b_id: b });
+        async function generateSchedule() {
+            if (playersCache.length < 2) return setStatus('Need 2+ players');
+
+            const { count } = await supabase.from('matches').select('*', { count: 'exact', head: true }).eq('tournament_id', currentTid);
+            if (count > 0) {
+                setStatus("Schedule already exists.");
+                alert("⚠️ A schedule already exists!\n\nPlease click '🗑 Clear Schedule' first if you want to re-generate it.");
+                return;
             }
-            pIds.splice(1, 0, pIds.pop());
-        }
-        const { error } = await supabase.from('matches').insert(rounds);
-        if(!error) { refreshData(); setStatus("Schedule created!"); }
-        else setStatus("Error: " + error.message);
-    }
 
-    function renderMatches(matches) {
-        if(!matches.length) return $('matchesContainer').innerHTML = '<p class="muted">No matches.</p>';
-        const byRound = {};
-        matches.forEach(m => {
-            if(!byRound[m.round_number]) byRound[m.round_number] = [];
-            byRound[m.round_number].push(m);
-        });
-        let html = '';
-        Object.keys(byRound).forEach(r => {
-            html += `
+            setStatus('Generating...');
+            const pIds = playersCache.map(p => p.id);
+            if (pIds.length % 2 !== 0) pIds.push(null);
+            const n = pIds.length;
+            const rounds = [];
+            for (let r = 0; r < n - 1; r++) {
+                for (let i = 0; i < n / 2; i++) {
+                    const a = pIds[i];
+                    const b = pIds[n - 1 - i];
+                    if (a && b) rounds.push({ tournament_id: currentTid, round_number: r + 1, player_a_id: a, player_b_id: b });
+                }
+                pIds.splice(1, 0, pIds.pop());
+            }
+            const { error } = await supabase.from('matches').insert(rounds);
+            if (!error) { refreshData(); setStatus("Schedule created!"); }
+            else setStatus("Error: " + error.message);
+        }
+
+        function renderMatches(matches) {
+            if (!matches.length) return $('matchesContainer').innerHTML = '<p class="muted">No matches.</p>';
+            const byRound = {};
+            matches.forEach(m => {
+                if (!byRound[m.round_number]) byRound[m.round_number] = [];
+                byRound[m.round_number].push(m);
+            });
+            let html = '';
+            Object.keys(byRound).forEach(r => {
+                html += `
             <div class="round-header">
                 <span class="r-title">ROUND ${r}</span>
                 <button id="btn-round-${r}" class="btn-xs" onclick="autoCheckResults(${r})">⚡ Check</button>
             </div>
             `;
-            byRound[r].forEach(m => {
-                const pA = playersCache.find(p => p.id === m.player_a_id) || {name:'?'};
-                const pB = playersCache.find(p => p.id === m.player_b_id) || {name:'?'};
-                const winA = m.winner_id === m.player_a_id;
-                const winB = m.winner_id === m.player_b_id;
-                html += `
+                byRound[r].forEach(m => {
+                    const pA = playersCache.find(p => p.id === m.player_a_id) || { name: '?' };
+                    const pB = playersCache.find(p => p.id === m.player_b_id) || { name: '?' };
+                    const winA = m.winner_id === m.player_a_id;
+                    const winB = m.winner_id === m.player_b_id;
+                    html += `
                 <div class="match-card" id="match-${m.id}">
                     <div class="match-players">
-                        <div class="p-side ${winA?'winner-text':''}" onclick="setWinner('${m.id}','${m.player_a_id}')">
+                        <div class="p-side ${winA ? 'winner-text' : ''}" onclick="setWinner('${m.id}','${m.player_a_id}')">
                             <img src="${pA.avatar_url || ''}" class="avatar-sm">
                             <span>${escapeHtml(pA.name)}</span>
                         </div>
                         <div class="vs-badge">VS</div>
-                        <div class="p-side p-right ${winB?'winner-text':''}" onclick="setWinner('${m.id}','${m.player_b_id}')">
+                        <div class="p-side p-right ${winB ? 'winner-text' : ''}" onclick="setWinner('${m.id}','${m.player_b_id}')">
                             <img src="${pB.avatar_url || ''}" class="avatar-sm">
                             <span>${escapeHtml(pB.name)}</span>
                         </div>
                     </div>
                 </div>`;
+                });
             });
-        });
-        $('matchesContainer').innerHTML = html;
-    }
+            $('matchesContainer').innerHTML = html;
+        }
 
-    window.setWinner = async (mid, pid) => {
-        if(!confirm('Set winner manually?')) return;
-        await supabase.from('matches').update({ winner_id: pid, completed: true }).eq('id', mid);
-        refreshData();
-    }
+        window.setWinner = async (mid, pid) => {
+            if (!confirm('Set winner manually?')) return;
+            await supabase.from('matches').update({ winner_id: pid, completed: true }).eq('id', mid);
+            refreshData();
+        }
 
-    function calculateAndRenderStandings(matches) {
-        const stats = {};
-        playersCache.forEach(p => { stats[p.id] = { ...p, w:0, l:0, pts:0, played:0 }; });
-        matches.forEach(m => {
-            if(m.completed && m.winner_id) {
-                const w = stats[m.winner_id];
-                const l = stats[m.player_a_id === m.winner_id ? m.player_b_id : m.player_a_id];
-                if(w && l) { w.w++; w.pts+=3; w.played++; l.l++; l.played++; }
-            }
-        });
-        const sorted = Object.values(stats).sort((a,b) => b.pts - a.pts);
-        $('standingsContainer').innerHTML = `<table><thead><tr><th>Rk</th><th>Player</th><th>W</th><th>L</th><th>Pts</th></tr></thead><tbody>
-            ${sorted.map((p,i) => `<tr>
-                <td>#${i+1}</td>
+        function calculateAndRenderStandings(matches) {
+            const stats = {};
+            playersCache.forEach(p => { stats[p.id] = { ...p, w: 0, l: 0, pts: 0, played: 0 }; });
+            matches.forEach(m => {
+                if (m.completed && m.winner_id) {
+                    const w = stats[m.winner_id];
+                    const l = stats[m.player_a_id === m.winner_id ? m.player_b_id : m.player_a_id];
+                    if (w && l) { w.w++; w.pts += 3; w.played++; l.l++; l.played++; }
+                }
+            });
+            const sorted = Object.values(stats).sort((a, b) => b.pts - a.pts);
+            $('standingsContainer').innerHTML = `<table><thead><tr><th>Rk</th><th>Player</th><th>W</th><th>L</th><th>Pts</th></tr></thead><tbody>
+            ${sorted.map((p, i) => `<tr>
+                <td>#${i + 1}</td>
                 <td><div class="player-cell"><img src="${p.avatar_url || ''}" class="avatar-sm"><span style="cursor:pointer; font-weight:bold" onclick="openProfile('${p.id}')">${escapeHtml(p.name)}</span></div></td>
                 <td>${p.w}</td><td>${p.l}</td><td style="color:var(--accent2); font-weight:bold">${p.pts}</td>
             </tr>`).join('')}
         </tbody></table>`;
-    }
-
-    async function createTournament() {
-        const name = $('newTourneyName').value;
-        if(!name) return;
-        const { data } = await supabase.from('tournaments').insert({name}).select().single();
-        if(data) {
-            currentTid = data.id; await loadTournaments(); $('tourneySelect').value = currentTid; refreshData(); $('newTourneyName').value = '';
         }
-    }
 
-    function setStatus(msg) { $('statusMsg').innerText = msg; }
-    window.openProfile = (pid) => {
-        const p = playersCache.find(x => x.id == pid);
-        if(!p) return;
-        $('pmName').innerText = p.name; $('pmTag').innerText = p.tag || "#UNKNOWN";
-        $('pmTrophies').innerText = p.trophies; $('pmRank').innerText = p.best_rank > 0 ? `#${p.best_rank}` : "Unranked";
-        $('pmCard').innerText = p.favorite_card || "-"; $('pmImg').src = p.avatar_url;
-        $('profileModal').classList.add('open');
-    }
-    window.closeProfile = () => $('profileModal').classList.remove('open');
-    function escapeHtml(s){ return (s??"").toString().replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
-    
-    init();
-  </script>
+        async function createTournament() {
+            const name = $('newTourneyName').value;
+            if (!name) return;
+            const { data } = await supabase.from('tournaments').insert({ name }).select().single();
+            if (data) {
+                currentTid = data.id; await loadTournaments(); $('tourneySelect').value = currentTid; refreshData(); $('newTourneyName').value = '';
+            }
+        }
+
+        function setStatus(msg) { $('statusMsg').innerText = msg; }
+        window.openProfile = (pid) => {
+            const p = playersCache.find(x => x.id == pid);
+            if (!p) return;
+            $('pmName').innerText = p.name; $('pmTag').innerText = p.tag || "#UNKNOWN";
+            $('pmTrophies').innerText = p.trophies; $('pmRank').innerText = p.best_rank > 0 ? `#${p.best_rank}` : "Unranked";
+            $('pmCard').innerText = p.favorite_card || "-"; $('pmImg').src = p.avatar_url;
+            $('profileModal').classList.add('open');
+        }
+        window.closeProfile = () => $('profileModal').classList.remove('open');
+        function escapeHtml(s) { return (s ?? "").toString().replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); }
+
+        init();
+    </script>
 </body>
+
 </html>

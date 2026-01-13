@@ -1,413 +1,762 @@
 <!doctype html>
 <html lang="en">
+
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Tournament Hub</title>
-  <style>
-    :root{
-      --bg:#0b1020; --card:#161f3a; --text:#e9eeff; --muted:#94a3b8;
-      --line:rgba(255,255,255,.08); --accent:#7c5cff; --accent2:#2ee59d;
-      --winner: #2ee59d; --loser: #ff4d6d;
-      --shadow: 0 12px 30px rgba(0,0,0,.35); --radius:16px;
-    }
-    *{box-sizing:border-box}
-    body{
-      margin:0; font-family: ui-sans-serif, system-ui, -apple-system, sans-serif;
-      background: var(--bg); color:var(--text);
-      background-image: 
-        radial-gradient(at 0% 0%, rgba(124,92,255,0.15) 0px, transparent 50%),
-        radial-gradient(at 100% 100%, rgba(46,229,157,0.1) 0px, transparent 50%);
-      background-attachment: fixed;
-    }
-    .wrap{max-width:900px;margin:28px auto;padding:0 16px 40px}
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Tournament Hub</title>
+    <style>
+        :root {
+            --bg: #0b1020;
+            --card: #161f3a;
+            --text: #e9eeff;
+            --muted: #94a3b8;
+            --line: rgba(255, 255, 255, .08);
+            --accent: #7c5cff;
+            --accent2: #2ee59d;
+            --winner: #2ee59d;
+            --loser: #ff4d6d;
+            --shadow: 0 12px 30px rgba(0, 0, 0, .35);
+            --radius: 16px;
+        }
 
-    /* --- NAVIGATION --- */
-    .nav { display:flex; gap:10px; justify-content:center; margin-bottom:30px; }
-    .nav-btn {
-        background: transparent; border:1px solid var(--line); color:var(--muted);
-        padding: 8px 16px; border-radius: 20px; cursor:pointer; font-weight:600; transition:0.2s;
-    }
-    .nav-btn.active, .nav-btn:hover { background: var(--accent); color:white; border-color:var(--accent); }
+        * {
+            box-sizing: border-box
+        }
 
-    /* --- LAYOUT UTILS --- */
-    .hidden { display:none !important; }
-    .btn-back {
-        display:inline-flex; align-items:center; gap:8px;
-        background: rgba(255,255,255,0.05); border:1px solid var(--line);
-        color:var(--muted); padding:8px 16px; border-radius:99px;
-        cursor:pointer; font-size:13px; transition:0.2s;
-    }
-    .btn-back:hover { background: rgba(255,255,255,0.1); color:white; }
+        body {
+            margin: 0;
+            font-family: ui-sans-serif, system-ui, -apple-system, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            background-image:
+                radial-gradient(at 0% 0%, rgba(124, 92, 255, 0.15) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(46, 229, 157, 0.1) 0px, transparent 50%);
+            background-attachment: fixed;
+        }
 
-    /* --- LISTS & CARDS --- */
-    .tourney-grid { display:grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap:16px; }
-    .tourney-card {
-        background: var(--card); border:1px solid var(--line); border-radius:16px; padding:20px;
-        cursor:pointer; transition: transform 0.2s, border-color 0.2s;
-        text-decoration: none; display:block; color:inherit;
-    }
-    .tourney-card:hover { transform:translateY(-3px); border-color:var(--accent); }
-    .t-name { font-size:18px; font-weight:bold; display:block; margin-bottom:6px; }
-    .t-date { font-size:12px; color:var(--muted); display:block; }
+        .wrap {
+            max-width: 900px;
+            margin: 28px auto;
+            padding: 0 16px 40px
+        }
 
-    /* --- TABLES --- */
-    .card { background: var(--card); border:1px solid var(--line); border-radius:var(--radius); padding:20px; margin-bottom:20px; }
-    h2 { margin:0 0 15px; font-size:12px; text-transform:uppercase; letter-spacing:1px; color:var(--muted); }
-    
-    table{width:100%; border-collapse:collapse;}
-    th,td{border-bottom:1px solid var(--line); padding:12px 8px; text-align:left; font-size:14px}
-    th{color:var(--muted); font-weight:600; font-size:11px; text-transform:uppercase;}
-    .rank-1{ color: #ffd700; font-weight:bold; } 
-    .rank-2{ color: #c0c0c0; font-weight:bold; }
-    .rank-3{ color: #cd7f32; font-weight:bold; }
-    .avatar-sm { width:24px; height:24px; border-radius:50%; object-fit:cover; background:#333; margin-right:8px; vertical-align:middle; }
-    .p-link { cursor:pointer; font-weight:600; transition:0.2s; }
-    .p-link:hover { color:var(--accent2); }
+        /* --- NAVIGATION --- */
+        .nav {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-bottom: 30px;
+        }
 
-    /* --- MATCHES --- */
-    .match-row {
-        display:flex; justify-content:space-between; align-items:center;
-        background:rgba(0,0,0,0.2); border:1px solid var(--line);
-        padding:10px 14px; border-radius:10px; margin-bottom:8px;
-    }
-    .m-round { font-size:11px; color:var(--muted); text-transform:uppercase; margin-bottom:6px; font-weight:bold; margin-top:12px;}
-    .vs-side { display:flex; align-items:center; gap:8px; width:40%; font-size:14px; }
-    .vs-side.right { justify-content:flex-end; text-align:right; flex-direction:row-reverse; }
-    .vs-mid { color:var(--muted); font-size:12px; font-weight:bold; width:20%; text-align:center; }
-    .win { color:var(--winner); font-weight:bold; }
-    .lose { opacity:0.5; } .lose img { filter:grayscale(1); }
+        .nav-btn {
+            background: transparent;
+            border: 1px solid var(--line);
+            color: var(--muted);
+            padding: 8px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: 0.2s;
+        }
 
-    /* --- RIVALRY --- */
-    .rivalry-select { display:grid; grid-template-columns: 1fr auto 1fr; gap:10px; align-items:center; margin-bottom:20px; }
-    select { width:100%; padding:10px; background:rgba(0,0,0,0.3); border:1px solid var(--line); color:white; border-radius:8px; }
-    .big-vs { font-size:20px; font-weight:bold; color:var(--muted); }
-    .rivalry-score { text-align:center; padding:20px; background:rgba(0,0,0,0.2); border-radius:12px; margin-bottom:20px; }
-    .r-big { font-size:32px; font-weight:bold; display:block; margin:10px 0; }
-    .r-names { font-size:14px; color:var(--muted); display:flex; justify-content:space-between; }
-    
-    /* --- MODAL --- */
-    .modal-overlay{ position:fixed; inset:0; background:rgba(0,0,0,0.8); backdrop-filter:blur(5px); display:flex; align-items:center; justify-content:center; z-index:100; opacity:0; pointer-events:none; transition:0.3s; }
-    .modal-overlay.open{ opacity:1; pointer-events:all; }
-    .profile-card{ background:#1c2540; border:1px solid var(--accent); width:340px; border-radius:20px; overflow:hidden; transform:scale(0.9); transition:0.3s; box-shadow: 0 0 40px rgba(124,92,255,0.2); }
-    .modal-overlay.open .profile-card{ transform:scale(1); }
-    .pc-header{ background:linear-gradient(45deg, var(--accent), #5035b4); padding:20px; text-align:center; position:relative; }
-    .pc-avatar{ width:80px; height:80px; border-radius:50%; border:3px solid white; background:#333; margin:0 auto 10px; object-fit:cover; display:block;}
-    .pc-name{ font-size:22px; font-weight:bold; color:white; margin:0; }
-    .pc-tag{ background:rgba(0,0,0,0.3); color:rgba(255,255,255,0.8); padding:4px 10px; border-radius:12px; font-family:monospace; font-size:12px; margin-top:5px; display:inline-block; }
-    .pc-stats{ padding:20px; display:grid; grid-template-columns:1fr 1fr; gap:15px; }
-    .stat-box{ background:rgba(0,0,0,0.2); padding:10px; border-radius:10px; text-align:center; border:1px solid var(--line); }
-    .stat-val{ font-size:18px; font-weight:bold; color:var(--text); display:block; }
-    .stat-lbl{ font-size:11px; color:var(--muted); text-transform:uppercase; margin-top:4px; display:block; }
-    .close-modal{ position:absolute; top:10px; right:10px; background:rgba(0,0,0,0.3); border:none; color:white; width:30px; height:30px; border-radius:50%; display:grid; place-items:center; cursor:pointer; }
-    
-    .loader { text-align:center; padding:40px; color:var(--muted); }
-  </style>
+        .nav-btn.active,
+        .nav-btn:hover {
+            background: var(--accent);
+            color: white;
+            border-color: var(--accent);
+        }
+
+        /* --- LAYOUT UTILS --- */
+        .hidden {
+            display: none !important;
+        }
+
+        .btn-back {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--line);
+            color: var(--muted);
+            padding: 8px 16px;
+            border-radius: 99px;
+            cursor: pointer;
+            font-size: 13px;
+            transition: 0.2s;
+        }
+
+        .btn-back:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+        }
+
+        /* --- LISTS & CARDS --- */
+        .tourney-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 16px;
+        }
+
+        .tourney-card {
+            background: var(--card);
+            border: 1px solid var(--line);
+            border-radius: 16px;
+            padding: 20px;
+            cursor: pointer;
+            transition: transform 0.2s, border-color 0.2s;
+            text-decoration: none;
+            display: block;
+            color: inherit;
+        }
+
+        .tourney-card:hover {
+            transform: translateY(-3px);
+            border-color: var(--accent);
+        }
+
+        .t-name {
+            font-size: 18px;
+            font-weight: bold;
+            display: block;
+            margin-bottom: 6px;
+        }
+
+        .t-date {
+            font-size: 12px;
+            color: var(--muted);
+            display: block;
+        }
+
+        /* --- TABLES --- */
+        .card {
+            background: var(--card);
+            border: 1px solid var(--line);
+            border-radius: var(--radius);
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        h2 {
+            margin: 0 0 15px;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--muted);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th,
+        td {
+            border-bottom: 1px solid var(--line);
+            padding: 12px 8px;
+            text-align: left;
+            font-size: 14px
+        }
+
+        th {
+            color: var(--muted);
+            font-weight: 600;
+            font-size: 11px;
+            text-transform: uppercase;
+        }
+
+        .rank-1 {
+            color: #ffd700;
+            font-weight: bold;
+        }
+
+        .rank-2 {
+            color: #c0c0c0;
+            font-weight: bold;
+        }
+
+        .rank-3 {
+            color: #cd7f32;
+            font-weight: bold;
+        }
+
+        .avatar-sm {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            object-fit: cover;
+            background: #333;
+            margin-right: 8px;
+            vertical-align: middle;
+        }
+
+        .p-link {
+            cursor: pointer;
+            font-weight: 600;
+            transition: 0.2s;
+        }
+
+        .p-link:hover {
+            color: var(--accent2);
+        }
+
+        /* --- MATCHES --- */
+        .match-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid var(--line);
+            padding: 10px 14px;
+            border-radius: 10px;
+            margin-bottom: 8px;
+        }
+
+        .m-round {
+            font-size: 11px;
+            color: var(--muted);
+            text-transform: uppercase;
+            margin-bottom: 6px;
+            font-weight: bold;
+            margin-top: 12px;
+        }
+
+        .vs-side {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            width: 40%;
+            font-size: 14px;
+        }
+
+        .vs-side.right {
+            justify-content: flex-end;
+            text-align: right;
+            flex-direction: row-reverse;
+        }
+
+        .vs-mid {
+            color: var(--muted);
+            font-size: 12px;
+            font-weight: bold;
+            width: 20%;
+            text-align: center;
+        }
+
+        .win {
+            color: var(--winner);
+            font-weight: bold;
+        }
+
+        .lose {
+            opacity: 0.5;
+        }
+
+        .lose img {
+            filter: grayscale(1);
+        }
+
+        /* --- RIVALRY --- */
+        .rivalry-select {
+            display: grid;
+            grid-template-columns: 1fr auto 1fr;
+            gap: 10px;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        select {
+            width: 100%;
+            padding: 10px;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--line);
+            color: white;
+            border-radius: 8px;
+        }
+
+        .big-vs {
+            font-size: 20px;
+            font-weight: bold;
+            color: var(--muted);
+        }
+
+        .rivalry-score {
+            text-align: center;
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 12px;
+            margin-bottom: 20px;
+        }
+
+        .r-big {
+            font-size: 32px;
+            font-weight: bold;
+            display: block;
+            margin: 10px 0;
+        }
+
+        .r-names {
+            font-size: 14px;
+            color: var(--muted);
+            display: flex;
+            justify-content: space-between;
+        }
+
+        /* --- MODAL --- */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(5px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            opacity: 0;
+            pointer-events: none;
+            transition: 0.3s;
+        }
+
+        .modal-overlay.open {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .profile-card {
+            background: #1c2540;
+            border: 1px solid var(--accent);
+            width: 340px;
+            border-radius: 20px;
+            overflow: hidden;
+            transform: scale(0.9);
+            transition: 0.3s;
+            box-shadow: 0 0 40px rgba(124, 92, 255, 0.2);
+        }
+
+        .modal-overlay.open .profile-card {
+            transform: scale(1);
+        }
+
+        .pc-header {
+            background: linear-gradient(45deg, var(--accent), #5035b4);
+            padding: 20px;
+            text-align: center;
+            position: relative;
+        }
+
+        .pc-avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            border: 3px solid white;
+            background: #333;
+            margin: 0 auto 10px;
+            object-fit: cover;
+            display: block;
+        }
+
+        .pc-name {
+            font-size: 22px;
+            font-weight: bold;
+            color: white;
+            margin: 0;
+        }
+
+        .pc-tag {
+            background: rgba(0, 0, 0, 0.3);
+            color: rgba(255, 255, 255, 0.8);
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-family: monospace;
+            font-size: 12px;
+            margin-top: 5px;
+            display: inline-block;
+        }
+
+        .pc-stats {
+            padding: 20px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .stat-box {
+            background: rgba(0, 0, 0, 0.2);
+            padding: 10px;
+            border-radius: 10px;
+            text-align: center;
+            border: 1px solid var(--line);
+        }
+
+        .stat-val {
+            font-size: 18px;
+            font-weight: bold;
+            color: var(--text);
+            display: block;
+        }
+
+        .stat-lbl {
+            font-size: 11px;
+            color: var(--muted);
+            text-transform: uppercase;
+            margin-top: 4px;
+            display: block;
+        }
+
+        .close-modal {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(0, 0, 0, 0.3);
+            border: none;
+            color: white;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: grid;
+            place-items: center;
+            cursor: pointer;
+        }
+
+        .loader {
+            text-align: center;
+            padding: 40px;
+            color: var(--muted);
+        }
+    </style>
 </head>
+
 <body>
 
-  <div class="modal-overlay" id="profileModal">
-    <div class="profile-card">
-        <div class="pc-header">
-            <button class="close-modal" onclick="closeProfile()">✕</button>
-            <img src="" class="pc-avatar" id="pmImg">
-            <h3 class="pc-name" id="pmName">Name</h3>
-            <span class="pc-tag" id="pmTag">#TAG</span>
-        </div>
-        <div class="pc-stats">
-            <div class="stat-box">
-                <span class="stat-val" id="pmTrophies">0</span>
-                <span class="stat-lbl">🏆 Trophies</span>
+    <div class="modal-overlay" id="profileModal">
+        <div class="profile-card">
+            <div class="pc-header">
+                <button class="close-modal" onclick="closeProfile()">✕</button>
+                <img src="" class="pc-avatar" id="pmImg">
+                <h3 class="pc-name" id="pmName">Name</h3>
+                <span class="pc-tag" id="pmTag">#TAG</span>
             </div>
-            <div class="stat-box">
-                <span class="stat-val" id="pmRank">Unranked</span>
-                <span class="stat-lbl">Best Rank</span>
-            </div>
-            <div class="stat-box" style="grid-column:span 2">
-                <span class="stat-val" id="pmCard" style="font-size:14px; color:var(--accent)">-</span>
-                <span class="stat-lbl">Favorite Card</span>
+            <div class="pc-stats">
+                <div class="stat-box">
+                    <span class="stat-val" id="pmTrophies">0</span>
+                    <span class="stat-lbl">🏆 Trophies</span>
+                </div>
+                <div class="stat-box">
+                    <span class="stat-val" id="pmRank">Unranked</span>
+                    <span class="stat-lbl">Best Rank</span>
+                </div>
+                <div class="stat-box" style="grid-column:span 2">
+                    <span class="stat-val" id="pmCard" style="font-size:14px; color:var(--accent)">-</span>
+                    <span class="stat-lbl">Favorite Card</span>
+                </div>
             </div>
         </div>
     </div>
-  </div>
 
-<div class="wrap">
-  
-  <div class="nav">
-      <button class="nav-btn active" id="navTourney" onclick="switchMainTab('tourney')">Tournaments</button>
-      <button class="nav-btn" id="navStats" onclick="switchMainTab('stats')">Global Stats</button>
-      <button class="nav-btn" id="navRival" onclick="switchMainTab('rival')">Head-to-Head</button>
-  </div>
+    <div class="wrap">
 
-  <div id="tourneySection">
-      <div id="listView">
-        <div id="listLoader" class="loader">Loading tournaments...</div>
-        <div id="tourneyGrid" class="tourney-grid"></div>
-      </div>
-
-      <div id="detailView" class="hidden">
-        <header>
-          <button class="btn-back" id="backBtn">← Back to List</button>
-          <div style="text-align:right"><button class="btn-back" id="refreshBtn">↻ Refresh</button></div>
-        </header>
-        <div style="text-align:center; margin-bottom:30px;">
-          <h1 id="dName">Tournament</h1>
-          <span id="dDate" style="color:var(--muted)"></span>
+        <div class="nav">
+            <button class="nav-btn active" id="navTourney" onclick="switchMainTab('tourney')">Tournaments</button>
+            <button class="nav-btn" id="navStats" onclick="switchMainTab('stats')">Global Stats</button>
+            <button class="nav-btn" id="navRival" onclick="switchMainTab('rival')">Head-to-Head</button>
         </div>
-        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px;">
-          <div class="card">
-            <h2>Standings</h2>
-            <div id="standingsArea"></div>
-          </div>
-          <div class="card">
-            <h2>Matches</h2>
-            <div id="matchesArea"></div>
-          </div>
+
+        <div id="tourneySection">
+            <div id="listView">
+                <div id="listLoader" class="loader">Loading tournaments...</div>
+                <div id="tourneyGrid" class="tourney-grid"></div>
+            </div>
+
+            <div id="detailView" class="hidden">
+                <header>
+                    <button class="btn-back" id="backBtn">← Back to List</button>
+                    <div style="text-align:right"><button class="btn-back" id="refreshBtn">↻ Refresh</button></div>
+                </header>
+                <div style="text-align:center; margin-bottom:30px;">
+                    <h1 id="dName">Tournament</h1>
+                    <span id="dDate" style="color:var(--muted)"></span>
+                </div>
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px;">
+                    <div class="card">
+                        <h2>Standings</h2>
+                        <div id="standingsArea"></div>
+                    </div>
+                    <div class="card">
+                        <h2>Matches</h2>
+                        <div id="matchesArea"></div>
+                    </div>
+                </div>
+            </div>
         </div>
-      </div>
-  </div>
 
-  <div id="statsSection" class="hidden">
-      <div class="card">
-          <h2>All-Time Leaderboard</h2>
-          <div id="globalStatsArea"><div class="loader">Calculating...</div></div>
-      </div>
-  </div>
+        <div id="statsSection" class="hidden">
+            <div class="card">
+                <h2>All-Time Leaderboard</h2>
+                <div id="globalStatsArea">
+                    <div class="loader">Calculating...</div>
+                </div>
+            </div>
+        </div>
 
-  <div id="rivalSection" class="hidden">
-      <div class="card">
-          <h2>Rivalry Checker</h2>
-          <div class="rivalry-select">
-              <select id="p1Select"><option>Player 1</option></select>
-              <div class="big-vs">VS</div>
-              <select id="p2Select"><option>Player 2</option></select>
-          </div>
-          <div id="rivalryResult" class="hidden">
-              <div class="rivalry-score">
-                  <div class="r-names"><span id="rName1">P1</span> <span id="rName2">P2</span></div>
-                  <div class="r-big"><span id="rScore1" style="color:var(--accent2)">0</span> - <span id="rScore2" style="color:var(--loser)">0</span></div>
-                  <div style="font-size:12px; color:var(--muted)">All-time record</div>
-              </div>
-              <div id="rivalryHistory"></div>
-          </div>
-      </div>
-  </div>
+        <div id="rivalSection" class="hidden">
+            <div class="card">
+                <h2>Rivalry Checker</h2>
+                <div class="rivalry-select">
+                    <select id="p1Select">
+                        <option>Player 1</option>
+                    </select>
+                    <div class="big-vs">VS</div>
+                    <select id="p2Select">
+                        <option>Player 2</option>
+                    </select>
+                </div>
+                <div id="rivalryResult" class="hidden">
+                    <div class="rivalry-score">
+                        <div class="r-names"><span id="rName1">P1</span> <span id="rName2">P2</span></div>
+                        <div class="r-big"><span id="rScore1" style="color:var(--accent2)">0</span> - <span id="rScore2"
+                                style="color:var(--loser)">0</span></div>
+                        <div style="font-size:12px; color:var(--muted)">All-time record</div>
+                    </div>
+                    <div id="rivalryHistory"></div>
+                </div>
+            </div>
+        </div>
 
-</div>
+    </div>
 
-<script type="module">
-    const SUPABASE_URL = "https://izmzpnfpcdxdqwgghsyq.supabase.co";
-    const SUPABASE_ANON_KEY = "sb_publishable_4kW-ZwFSbzqPkWz63jYcGw_Kldfdp7R";
+    <script type="module">
+        const SUPABASE_URL = "https://izmzpnfpcdxdqwgghsyq.supabase.co";
+        const SUPABASE_ANON_KEY = "sb_publishable_4kW-ZwFSbzqPkWz63jYcGw_Kldfdp7R";
 
-    import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
-    const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
+        const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    const $ = (id) => document.getElementById(id);
-    let currentTid = null;
-    let playersMap = new Map(); // Store full player objects
+        const $ = (id) => document.getElementById(id);
+        let currentTid = null;
+        let playersMap = new Map(); // Store full player objects
 
-    // --- MAIN TABS ---
-    window.switchMainTab = (tab) => {
-        ['tourney','stats','rival'].forEach(t => {
-            $(`nav${t.charAt(0).toUpperCase()+t.slice(1)}`).classList.remove('active');
-            $(`${t}Section`).classList.add('hidden');
-        });
-        
-        if(tab === 'tourney') {
-            $('navTourney').classList.add('active');
-            $('tourneySection').classList.remove('hidden');
-        } else if(tab === 'stats') {
-            $('navStats').classList.add('active');
-            $('statsSection').classList.remove('hidden');
-            loadGlobalStats();
-        } else if(tab === 'rival') {
-            $('navRival').classList.add('active');
-            $('rivalSection').classList.remove('hidden');
-            loadRivalryInputs();
+        // --- MAIN TABS ---
+        window.switchMainTab = (tab) => {
+            ['tourney', 'stats', 'rival'].forEach(t => {
+                $(`nav${t.charAt(0).toUpperCase() + t.slice(1)}`).classList.remove('active');
+                $(`${t}Section`).classList.add('hidden');
+            });
+
+            if (tab === 'tourney') {
+                $('navTourney').classList.add('active');
+                $('tourneySection').classList.remove('hidden');
+            } else if (tab === 'stats') {
+                $('navStats').classList.add('active');
+                $('statsSection').classList.remove('hidden');
+                loadGlobalStats();
+            } else if (tab === 'rival') {
+                $('navRival').classList.add('active');
+                $('rivalSection').classList.remove('hidden');
+                loadRivalryInputs();
+            }
         }
-    }
 
-    // --- VIEW 1: TOURNAMENTS ---
-    async function loadList(){
-        const { data } = await supabase.from("tournaments").select("id,name,created_at").order("created_at", { ascending:false }).limit(50);
-        $('listLoader').classList.add('hidden');
-        $('tourneyGrid').innerHTML = data.map(t => `
+        // --- VIEW 1: TOURNAMENTS ---
+        async function loadList() {
+            const { data } = await supabase.from("tournaments").select("id,name,created_at").order("created_at", { ascending: false }).limit(50);
+            $('listLoader').classList.add('hidden');
+            $('tourneyGrid').innerHTML = data.map(t => `
             <div class="tourney-card" data-id="${t.id}">
                 <span class="t-name">${escapeHtml(t.name)}</span>
                 <span class="t-date">${fmtDate(t.created_at)}</span>
             </div>
         `).join("");
-        document.querySelectorAll('.tourney-card').forEach(card => card.addEventListener('click', () => openTournament(card.getAttribute('data-id'))));
-    }
-
-    async function openTournament(tid){
-        currentTid = tid;
-        $('listView').classList.add('hidden');
-        $('detailView').classList.remove('hidden');
-        $('dName').textContent = "Loading...";
-        $('standingsArea').innerHTML = '<div class="loader">Loading...</div>';
-        
-        const { data: info } = await supabase.from("tournaments").select("*").eq("id", tid).single();
-        if(info) { $('dName').textContent = info.name; $('dDate').textContent = fmtDate(info.created_at); }
-        loadDetails(tid);
-    }
-
-    async function loadDetails(tid){
-        const { data: matches } = await supabase.from("matches").select("*, playersA:player_a_id(*), playersB:player_b_id(*)").eq("tournament_id", tid).order("round_number", { ascending:true });
-        const { data: players } = await supabase.from("tournament_players").select("player_id, players(*)").eq("tournament_id", tid);
-
-        playersMap.clear();
-        const stats = new Map();
-        if(players) players.forEach(p => { playersMap.set(p.player_id, p.players); stats.set(p.player_id, { ...p.players, w:0, l:0, pts:0 }); });
-
-        const rounds = {};
-        if(matches){
-            matches.forEach(m => {
-                if(!rounds[m.round_number]) rounds[m.round_number] = [];
-                rounds[m.round_number].push(m);
-                if(m.completed && m.winner_id){
-                    const pA = stats.get(m.player_a_id); const pB = stats.get(m.player_b_id);
-                    if(pA && pB){
-                        if(m.winner_id === m.player_a_id) { pA.w++; pA.pts+=3; pB.l++; } else { pB.w++; pB.pts+=3; pA.l++; }
-                    }
-                }
-            });
+            document.querySelectorAll('.tourney-card').forEach(card => card.addEventListener('click', () => openTournament(card.getAttribute('data-id'))));
         }
-        renderStandings(stats);
-        renderMatches(rounds);
-    }
 
-    // --- VIEW 2: GLOBAL STATS ---
-    async function loadGlobalStats() {
-        const { data: players } = await supabase.from("players").select("*");
-        const { data: matches } = await supabase.from("matches").select("*").eq("completed", true);
+        async function openTournament(tid) {
+            currentTid = tid;
+            $('listView').classList.add('hidden');
+            $('detailView').classList.remove('hidden');
+            $('dName').textContent = "Loading...";
+            $('standingsArea').innerHTML = '<div class="loader">Loading...</div>';
 
-        const stats = {};
-        players.forEach(p => stats[p.id] = { ...p, w:0, l:0, total:0 });
+            const { data: info } = await supabase.from("tournaments").select("*").eq("id", tid).single();
+            if (info) { $('dName').textContent = info.name; $('dDate').textContent = fmtDate(info.created_at); }
+            loadDetails(tid);
+        }
 
-        matches.forEach(m => {
-            const w = stats[m.winner_id];
-            const l = stats[m.winner_id === m.player_a_id ? m.player_b_id : m.player_a_id];
-            if(w) { w.w++; w.total++; }
-            if(l) { l.l++; l.total++; }
-        });
+        async function loadDetails(tid) {
+            const { data: matches } = await supabase.from("matches").select("*, playersA:player_a_id(*), playersB:player_b_id(*)").eq("tournament_id", tid).order("round_number", { ascending: true });
+            const { data: players } = await supabase.from("tournament_players").select("player_id, players(*)").eq("tournament_id", tid);
 
-        const list = Object.values(stats)
-            .filter(p => p.total > 0) // Only show players who played
-            .sort((a,b) => (b.w - a.w) || (b.w/b.total - a.w/a.total));
+            playersMap.clear();
+            const stats = new Map();
+            if (players) players.forEach(p => { playersMap.set(p.player_id, p.players); stats.set(p.player_id, { ...p.players, w: 0, l: 0, pts: 0 }); });
 
-        let html = `<table><thead><tr><th>#</th><th>Player</th><th>Matches</th><th>Wins</th><th>Win Rate</th></tr></thead><tbody>`;
-        list.forEach((p,i) => {
-            const wr = Math.round((p.w / p.total) * 100);
-            html += `<tr>
-                <td>${i+1}</td>
+            const rounds = {};
+            if (matches) {
+                matches.forEach(m => {
+                    if (!rounds[m.round_number]) rounds[m.round_number] = [];
+                    rounds[m.round_number].push(m);
+                    if (m.completed && m.winner_id) {
+                        const pA = stats.get(m.player_a_id); const pB = stats.get(m.player_b_id);
+                        if (pA && pB) {
+                            if (m.winner_id === m.player_a_id) { pA.w++; pA.pts += 3; pB.l++; } else { pB.w++; pB.pts += 3; pA.l++; }
+                        }
+                    }
+                });
+            }
+            renderStandings(stats);
+            renderMatches(rounds);
+        }
+
+        // --- VIEW 2: GLOBAL STATS ---
+        async function loadGlobalStats() {
+            const { data: players, error: playersErr } = await supabase.from("players").select("*");
+            const { data: matches, error: matchesErr } = await supabase.from("matches").select("*").eq("completed", true);
+
+            // Handle errors or empty data
+            if (playersErr || !players || players.length === 0) {
+                $('globalStatsArea').innerHTML = '<div class="loader">No players found.</div>';
+                return;
+            }
+            if (matchesErr || !matches) {
+                $('globalStatsArea').innerHTML = '<div class="loader">Could not load matches.</div>';
+                return;
+            }
+
+            const stats = {};
+            players.forEach(p => stats[p.id] = { ...p, w: 0, l: 0, total: 0 });
+
+            matches.forEach(m => {
+                // Skip matches without valid winner
+                if (!m.winner_id) return;
+
+                const w = stats[m.winner_id];
+                const loserId = m.winner_id === m.player_a_id ? m.player_b_id : m.player_a_id;
+                const l = stats[loserId];
+                if (w) { w.w++; w.total++; }
+                if (l) { l.l++; l.total++; }
+            });
+
+            const list = Object.values(stats)
+                .filter(p => p.total > 0) // Only show players who played
+                .sort((a, b) => (b.w - a.w) || (b.w / b.total - a.w / a.total));
+
+            if (list.length === 0) {
+                $('globalStatsArea').innerHTML = '<div class="loader">No completed matches yet.</div>';
+                return;
+            }
+
+            let html = `<table><thead><tr><th>#</th><th>Player</th><th>Matches</th><th>Wins</th><th>Win Rate</th></tr></thead><tbody>`;
+            list.forEach((p, i) => {
+                const wr = Math.round((p.w / p.total) * 100);
+                html += `<tr>
+                <td>${i + 1}</td>
                 <td><img src="${p.avatar_url || ''}" class="avatar-sm"><span class="p-link" onclick="openProfile('${p.id}')">${p.name}</span></td>
                 <td>${p.total}</td>
                 <td style="color:var(--accent2); font-weight:bold">${p.w}</td>
                 <td>${wr}%</td>
             </tr>`;
-        });
-        html += `</tbody></table>`;
-        $('globalStatsArea').innerHTML = html;
-        
-        // Cache players for modal
-        players.forEach(p => playersMap.set(p.id, p));
-    }
+            });
+            html += `</tbody></table>`;
+            $('globalStatsArea').innerHTML = html;
 
-    // --- VIEW 3: RIVALRY ---
-    async function loadRivalryInputs() {
-        const { data: players } = await supabase.from("players").select("*").order('name');
-        const opts = players.map(p => `<option value="${p.id}">${p.name}</option>`).join('');
-        $('p1Select').innerHTML = `<option value="">Select P1</option>` + opts;
-        $('p2Select').innerHTML = `<option value="">Select P2</option>` + opts;
-        
-        // Listener
-        const check = async () => {
-            const p1 = $('p1Select').value;
-            const p2 = $('p2Select').value;
-            if(p1 && p2 && p1 !== p2) runRivalry(p1, p2, players);
+            // Cache players for modal
+            players.forEach(p => playersMap.set(p.id, p));
         }
-        $('p1Select').onchange = check;
-        $('p2Select').onchange = check;
-    }
 
-    async function runRivalry(p1Id, p2Id, allPlayers) {
-        const p1 = allPlayers.find(p => p.id === p1Id);
-        const p2 = allPlayers.find(p => p.id === p2Id);
-        
-        const { data: matches } = await supabase.from("matches").select("*")
-            .or(`player_a_id.eq.${p1Id},player_b_id.eq.${p1Id}`)
-            .eq("completed", true);
-            
-        // Filter purely JS side for simplicity
-        const h2h = matches.filter(m => (m.player_a_id === p2Id || m.player_b_id === p2Id));
+        // --- VIEW 3: RIVALRY ---
+        async function loadRivalryInputs() {
+            const { data: players } = await supabase.from("players").select("*").order('name');
+            const opts = players.map(p => `<option value="${p.id}">${p.name}</option>`).join('');
+            $('p1Select').innerHTML = `<option value="">Select P1</option>` + opts;
+            $('p2Select').innerHTML = `<option value="">Select P2</option>` + opts;
 
-        $('rivalryResult').classList.remove('hidden');
-        $('rName1').innerText = p1.name; $('rName2').innerText = p2.name;
-        
-        let s1 = 0, s2 = 0;
-        let histHtml = '';
-        
-        h2h.forEach(m => {
-            const p1Won = m.winner_id === p1Id;
-            if(p1Won) s1++; else s2++;
-            
-            const resClass = p1Won ? "win" : "lose";
-            const resText = p1Won ? "Won" : "Lost";
-            histHtml += `<div class="match-row" style="font-size:12px">
+            // Listener
+            const check = async () => {
+                const p1 = $('p1Select').value;
+                const p2 = $('p2Select').value;
+                if (p1 && p2 && p1 !== p2) runRivalry(p1, p2, players);
+            }
+            $('p1Select').onchange = check;
+            $('p2Select').onchange = check;
+        }
+
+        async function runRivalry(p1Id, p2Id, allPlayers) {
+            const p1 = allPlayers.find(p => p.id === p1Id);
+            const p2 = allPlayers.find(p => p.id === p2Id);
+
+            const { data: matches } = await supabase.from("matches").select("*")
+                .or(`player_a_id.eq.${p1Id},player_b_id.eq.${p1Id}`)
+                .eq("completed", true);
+
+            // Filter purely JS side for simplicity
+            const h2h = matches.filter(m => (m.player_a_id === p2Id || m.player_b_id === p2Id));
+
+            $('rivalryResult').classList.remove('hidden');
+            $('rName1').innerText = p1.name; $('rName2').innerText = p2.name;
+
+            let s1 = 0, s2 = 0;
+            let histHtml = '';
+
+            h2h.forEach(m => {
+                const p1Won = m.winner_id === p1Id;
+                if (p1Won) s1++; else s2++;
+
+                const resClass = p1Won ? "win" : "lose";
+                const resText = p1Won ? "Won" : "Lost";
+                histHtml += `<div class="match-row" style="font-size:12px">
                 <span style="color:var(--muted)">Round ${m.round_number}</span>
                 <span class="${resClass}">${resText}</span>
             </div>`;
-        });
-        
-        $('rScore1').innerText = s1; $('rScore2').innerText = s2;
-        $('rivalryHistory').innerHTML = histHtml || '<div style="text-align:center; padding:10px; color:var(--muted)">No matches found between them.</div>';
-    }
-
-    // --- RENDERERS & HELPERS ---
-    function renderStandings(map){
-        // --- FIX: Removed Trophy Sorting for Fairness ---
-        const list = [...map.values()].sort((a,b) => b.pts - a.pts);
-        
-        let html = `<table><thead><tr><th>#</th><th>Player</th><th>W</th><th>L</th><th>Pts</th></tr></thead><tbody>`;
-        list.forEach((p,i) => {
-             const r = i===0?'rank-1':i===1?'rank-2':i===2?'rank-3':'';
-             html += `<tr><td class="${r}">${i+1}</td><td><img src="${p.avatar_url||''}" class="avatar-sm"><span class="p-link" onclick="openProfile('${p.id}')">${escapeHtml(p.name)}</span></td><td>${p.w}</td><td>${p.l}</td><td style="font-weight:bold">${p.pts}</td></tr>`;
-        });
-        $('standingsArea').innerHTML = list.length ? html + `</tbody></table>` : '<div class="loader">No players.</div>';
-    }
-
-    function renderMatches(rounds){
-        let html = "";
-        Object.keys(rounds).sort((a,b)=>a-b).forEach(r => {
-            html += `<div class="m-round">Round ${r}</div>`;
-            rounds[r].forEach(m => {
-                const pA = m.playersA, pB = m.playersB;
-                let cA = "vs-side", cB = "vs-side right", mid = "vs";
-                if(m.completed){
-                    if(m.winner_id == m.player_a_id){ cA+=" win"; cB+=" lose"; mid=`1 - 0`; } else { cB+=" win"; cA+=" lose"; mid=`0 - 1`; }
-                }
-                html += `<div class="match-row"><div class="${cA}"><img src="${pA?.avatar_url||''}" class="avatar-sm"><span>${escapeHtml(pA?.name)}</span></div><div class="vs-mid">${mid}</div><div class="${cB}"><img src="${pB?.avatar_url||''}" class="avatar-sm"><span>${escapeHtml(pB?.name)}</span></div></div>`;
             });
-        });
-        $('matchesArea').innerHTML = html || '<div class="loader">No matches.</div>';
-    }
 
-    window.openProfile = (pid) => {
-        const p = playersMap.get(pid); if(!p) return;
-        $('pmName').innerText = p.name; $('pmTag').innerText = p.tag || "#UNKNOWN";
-        $('pmTrophies').innerText = p.trophies; $('pmRank').innerText = p.best_rank > 0 ? `#${p.best_rank}` : "Unranked";
-        $('pmCard').innerText = p.favorite_card || "-"; $('pmImg').src = p.avatar_url;
-        $('profileModal').classList.add('open');
-    }
-    window.closeProfile = () => $('profileModal').classList.remove('open');
-    function escapeHtml(s){ return (s??"").toString().replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
-    function fmtDate(d){ try{return new Date(d).toLocaleDateString();}catch{return d;} }
+            $('rScore1').innerText = s1; $('rScore2').innerText = s2;
+            $('rivalryHistory').innerHTML = histHtml || '<div style="text-align:center; padding:10px; color:var(--muted)">No matches found between them.</div>';
+        }
 
-    $('backBtn').onclick = () => { $('listView').classList.remove('hidden'); $('detailView').classList.add('hidden'); };
-    $('refreshBtn').onclick = () => { if(currentTid) loadDetails(currentTid); };
+        // --- RENDERERS & HELPERS ---
+        function renderStandings(map) {
+            // --- FIX: Removed Trophy Sorting for Fairness ---
+            const list = [...map.values()].sort((a, b) => b.pts - a.pts);
 
-    loadList();
-</script>
+            let html = `<table><thead><tr><th>#</th><th>Player</th><th>W</th><th>L</th><th>Pts</th></tr></thead><tbody>`;
+            list.forEach((p, i) => {
+                const r = i === 0 ? 'rank-1' : i === 1 ? 'rank-2' : i === 2 ? 'rank-3' : '';
+                html += `<tr><td class="${r}">${i + 1}</td><td><img src="${p.avatar_url || ''}" class="avatar-sm"><span class="p-link" onclick="openProfile('${p.id}')">${escapeHtml(p.name)}</span></td><td>${p.w}</td><td>${p.l}</td><td style="font-weight:bold">${p.pts}</td></tr>`;
+            });
+            $('standingsArea').innerHTML = list.length ? html + `</tbody></table>` : '<div class="loader">No players.</div>';
+        }
+
+        function renderMatches(rounds) {
+            let html = "";
+            Object.keys(rounds).sort((a, b) => a - b).forEach(r => {
+                html += `<div class="m-round">Round ${r}</div>`;
+                rounds[r].forEach(m => {
+                    const pA = m.playersA, pB = m.playersB;
+                    let cA = "vs-side", cB = "vs-side right", mid = "vs";
+                    if (m.completed) {
+                        if (m.winner_id == m.player_a_id) { cA += " win"; cB += " lose"; mid = `1 - 0`; } else { cB += " win"; cA += " lose"; mid = `0 - 1`; }
+                    }
+                    html += `<div class="match-row"><div class="${cA}"><img src="${pA?.avatar_url || ''}" class="avatar-sm"><span>${escapeHtml(pA?.name)}</span></div><div class="vs-mid">${mid}</div><div class="${cB}"><img src="${pB?.avatar_url || ''}" class="avatar-sm"><span>${escapeHtml(pB?.name)}</span></div></div>`;
+                });
+            });
+            $('matchesArea').innerHTML = html || '<div class="loader">No matches.</div>';
+        }
+
+        window.openProfile = (pid) => {
+            const p = playersMap.get(pid); if (!p) return;
+            $('pmName').innerText = p.name; $('pmTag').innerText = p.tag || "#UNKNOWN";
+            $('pmTrophies').innerText = p.trophies; $('pmRank').innerText = p.best_rank > 0 ? `#${p.best_rank}` : "Unranked";
+            $('pmCard').innerText = p.favorite_card || "-"; $('pmImg').src = p.avatar_url;
+            $('profileModal').classList.add('open');
+        }
+        window.closeProfile = () => $('profileModal').classList.remove('open');
+        function escapeHtml(s) { return (s ?? "").toString().replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); }
+        function fmtDate(d) { try { return new Date(d).toLocaleDateString(); } catch { return d; } }
+
+        $('backBtn').onclick = () => { $('listView').classList.remove('hidden'); $('detailView').classList.add('hidden'); };
+        $('refreshBtn').onclick = () => { if (currentTid) loadDetails(currentTid); };
+
+        loadList();
+    </script>
 </body>
+
 </html>
