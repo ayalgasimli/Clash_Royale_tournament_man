@@ -224,8 +224,6 @@
     let playersCache = [];
     const FUNCTION_URL = "http://localhost:8000"; 
 
-    // --- API & LOGIC ---
-
     async function callApi(payload) {
         try {
             const response = await fetch(FUNCTION_URL, {
@@ -244,11 +242,9 @@
         }
     }
 
-    // --- FIX: Updated Auto Check to prevent Time Travel & Ladder Matches ---
     async function autoCheckResults(roundNum = null) {
         if(!currentTid) return;
         
-        // 1. Get Tournament Info for Start Time
         const { data: tourneyData } = await supabase.from('tournaments').select('created_at').eq('id', currentTid).single();
         if (!tourneyData) return setStatus("Error: Could not find tournament.");
         const tournamentStart = new Date(tourneyData.created_at).getTime();
@@ -265,7 +261,6 @@
         setStatus(roundNum ? `Checking Round ${roundNum}...` : "Scanning All Matches...");
         
         try {
-            // Build Query
             let query = supabase.from('matches')
                 .select('*, pA:player_a_id(tag), pB:player_b_id(tag)')
                 .eq('tournament_id', currentTid)
@@ -287,22 +282,18 @@
                 const card = document.getElementById(`match-${m.id}`);
                 if(card) card.classList.add('checking');
                 
-                // Fetch Battle Log
                 const log = await callApi({ playerTag: m.pA.tag, mode: 'battlelog' });
                 const targetTag = m.pB.tag.replace('#','');
                 
-                // --- FIX: Logic to find correct battle ---
                 const battle = log.find(b => {
                     const isOpponent = b.opponent[0].tag.replace('#','') === targetTag;
                     
-                    // Parse Battle Time (YYYYMMDDTHH...)
                     const t = b.battleTime; 
                     const battleDate = new Date(Date.UTC(
                         t.slice(0, 4), t.slice(4, 6) - 1, t.slice(6, 8),
                         t.slice(9, 11), t.slice(11, 13), t.slice(13, 15)
                     ));
                     
-                    // Checks
                     const isNewEnough = battleDate.getTime() > tournamentStart;
                     const validTypes = ['friendly', 'clanMate', 'tournament'];
                     const isCorrectType = validTypes.includes(b.type);
@@ -343,10 +334,7 @@
         }
     }
     
-    // Make function available to HTML buttons
     window.autoCheckResults = autoCheckResults;
-
-    // --- INIT ---
 
     async function init() {
         await loadTournaments();
@@ -426,8 +414,6 @@
         setStatus('Ready');
     }
 
-    // --- PLAYER MGMT ---
-
     async function addPlayer() {
         const input = $('playerTagInput').value.trim();
         if(!input) return;
@@ -482,7 +468,6 @@
     }
 
     function renderPlayerList() {
-        // --- FIX: Added escapeHtml for Security ---
         $('playerList').innerHTML = playersCache.map(p => `
             <div class="list-item">
                 <div style="display:flex; align-items:center; gap:10px">
@@ -499,8 +484,6 @@
             </div>
         `).join('');
     }
-
-    // --- SCHEDULE ---
 
     async function generateSchedule() {
         if(playersCache.length < 2) return setStatus('Need 2+ players');
@@ -585,7 +568,6 @@
                 if(w && l) { w.w++; w.pts+=3; w.played++; l.l++; l.played++; }
             }
         });
-        // --- FIX: Removed Trophy Sorting ---
         const sorted = Object.values(stats).sort((a,b) => b.pts - a.pts);
         $('standingsContainer').innerHTML = `<table><thead><tr><th>Rk</th><th>Player</th><th>W</th><th>L</th><th>Pts</th></tr></thead><tbody>
             ${sorted.map((p,i) => `<tr>
@@ -615,7 +597,6 @@
         $('profileModal').classList.add('open');
     }
     window.closeProfile = () => $('profileModal').classList.remove('open');
-    // --- FIX: Added escapeHtml Helper ---
     function escapeHtml(s){ return (s??"").toString().replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
     
     init();
