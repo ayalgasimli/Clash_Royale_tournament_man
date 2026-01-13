@@ -3,20 +3,24 @@ from flask_cors import CORS
 import requests
 import os
 import time
-
-app = Flask(__name__)
-CORS(app)
+from dotenv import load_dotenv  # <--- IMPORT THIS
 
 # --- CONFIGURATION ---
-# Load API key from environment variable
-CR_API_KEY = os.environ.get("CR_API_KEY")
+
+# 1. Load the variables from the .env file
+load_dotenv()  # <--- ADD THIS FUNCTION CALL
+
+# 2. Now os.environ can actually see the key
+CR_API_KEY = os.getenv("CR_API_KEY") # <--- BETTER TO USE os.getenv
 
 if not CR_API_KEY:
     print("⚠️  WARNING: CR_API_KEY environment variable is not set!")
-    print("   Set it with: set CR_API_KEY=your_api_key (Windows)")
-    print("   Or: export CR_API_KEY=your_api_key (Linux/Mac)")
+    print("   Make sure you have a .env file with CR_API_KEY=your_key inside.")
 
 BASE_URL = "https://api.clashroyale.com/v1"
+
+app = Flask(__name__)
+CORS(app)
 
 # Rate limiting: track last request time
 last_request_time = 0
@@ -99,5 +103,5 @@ if __name__ == '__main__':
         print("✅ API Key loaded from environment")
     else:
         print("❌ No API key - requests will fail!")
-    # host='0.0.0.0' fixes some local connection issues
+    
     app.run(host='0.0.0.0', port=8000)

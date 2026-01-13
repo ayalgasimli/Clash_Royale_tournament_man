@@ -45,7 +45,7 @@ export CR_API_KEY=your_api_key_here
 ### 3. Run the API Server
 
 ```bash
-pip install flask flask-cors requests
+pip install flask flask-cors requests python-dotenv
 python api.py
 ```
 
