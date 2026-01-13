@@ -244,10 +244,15 @@
         }
     }
 
-    // Updated Auto Check: Now accepts a specific Round Number
+    // --- FIX: Updated Auto Check to prevent Time Travel & Ladder Matches ---
     async function autoCheckResults(roundNum = null) {
         if(!currentTid) return;
         
+        // 1. Get Tournament Info for Start Time
+        const { data: tourneyData } = await supabase.from('tournaments').select('created_at').eq('id', currentTid).single();
+        if (!tourneyData) return setStatus("Error: Could not find tournament.");
+        const tournamentStart = new Date(tourneyData.created_at).getTime();
+
         let btn;
         if(roundNum) {
             btn = document.getElementById(`btn-round-${roundNum}`);
@@ -266,10 +271,7 @@
                 .eq('tournament_id', currentTid)
                 .is('completed', false);
 
-            // Filter by round if clicked specific button
-            if(roundNum) {
-                query = query.eq('round_number', roundNum);
-            }
+            if(roundNum) query = query.eq('round_number', roundNum);
 
             const { data: matches } = await query;
 
@@ -289,8 +291,24 @@
                 const log = await callApi({ playerTag: m.pA.tag, mode: 'battlelog' });
                 const targetTag = m.pB.tag.replace('#','');
                 
-                // Find ANY battle against this opponent (Latest first)
-                const battle = log.find(b => b.opponent[0].tag.replace('#','') === targetTag);
+                // --- FIX: Logic to find correct battle ---
+                const battle = log.find(b => {
+                    const isOpponent = b.opponent[0].tag.replace('#','') === targetTag;
+                    
+                    // Parse Battle Time (YYYYMMDDTHH...)
+                    const t = b.battleTime; 
+                    const battleDate = new Date(Date.UTC(
+                        t.slice(0, 4), t.slice(4, 6) - 1, t.slice(6, 8),
+                        t.slice(9, 11), t.slice(11, 13), t.slice(13, 15)
+                    ));
+                    
+                    // Checks
+                    const isNewEnough = battleDate.getTime() > tournamentStart;
+                    const validTypes = ['friendly', 'clanMate', 'tournament'];
+                    const isCorrectType = validTypes.includes(b.type);
+
+                    return isOpponent && isNewEnough && isCorrectType;
+                });
                 
                 if (battle) {
                     const crownsA = battle.team[0].crowns;
@@ -341,7 +359,7 @@
         $('deleteGlobalBtn').onclick = deletePlayerGlobally; 
         $('generateBtn').onclick = generateSchedule;
         $('refreshBtn').onclick = refreshData;
-        $('autoCheckBtn').onclick = () => autoCheckResults(null); // Global check
+        $('autoCheckBtn').onclick = () => autoCheckResults(null); 
         
         $('tourneySelect').onchange = (e) => {
             currentTid = e.target.value;
@@ -464,12 +482,13 @@
     }
 
     function renderPlayerList() {
+        // --- FIX: Added escapeHtml for Security ---
         $('playerList').innerHTML = playersCache.map(p => `
             <div class="list-item">
                 <div style="display:flex; align-items:center; gap:10px">
                     <img src="${p.avatar_url || 'https://ui-avatars.com/api/?name=?'}" class="avatar-sm">
                     <div>
-                        <b style="cursor:pointer; color:var(--accent2)" onclick="openProfile('${p.id}')">${p.name}</b>
+                        <b style="cursor:pointer; color:var(--accent2)" onclick="openProfile('${p.id}')">${escapeHtml(p.name)}</b>
                         <span class="tag-badge">${p.tag || ''}</span>
                     </div>
                 </div>
@@ -486,12 +505,7 @@
     async function generateSchedule() {
         if(playersCache.length < 2) return setStatus('Need 2+ players');
         
-        // 1. CHECK IF SCHEDULE ALREADY EXISTS
-        const { count } = await supabase
-            .from('matches')
-            .select('*', { count: 'exact', head: true })
-            .eq('tournament_id', currentTid);
-
+        const { count } = await supabase.from('matches').select('*', { count: 'exact', head: true }).eq('tournament_id', currentTid);
         if(count > 0) {
             setStatus("Schedule already exists.");
             alert("⚠️ A schedule already exists!\n\nPlease click '🗑 Clear Schedule' first if you want to re-generate it.");
@@ -525,7 +539,6 @@
         });
         let html = '';
         Object.keys(byRound).forEach(r => {
-            // Updated Round Header with Check Button
             html += `
             <div class="round-header">
                 <span class="r-title">ROUND ${r}</span>
@@ -542,12 +555,12 @@
                     <div class="match-players">
                         <div class="p-side ${winA?'winner-text':''}" onclick="setWinner('${m.id}','${m.player_a_id}')">
                             <img src="${pA.avatar_url || ''}" class="avatar-sm">
-                            <span>${pA.name}</span>
+                            <span>${escapeHtml(pA.name)}</span>
                         </div>
                         <div class="vs-badge">VS</div>
                         <div class="p-side p-right ${winB?'winner-text':''}" onclick="setWinner('${m.id}','${m.player_b_id}')">
                             <img src="${pB.avatar_url || ''}" class="avatar-sm">
-                            <span>${pB.name}</span>
+                            <span>${escapeHtml(pB.name)}</span>
                         </div>
                     </div>
                 </div>`;
@@ -572,11 +585,12 @@
                 if(w && l) { w.w++; w.pts+=3; w.played++; l.l++; l.played++; }
             }
         });
-        const sorted = Object.values(stats).sort((a,b) => b.pts - a.pts || b.trophies - a.trophies);
+        // --- FIX: Removed Trophy Sorting ---
+        const sorted = Object.values(stats).sort((a,b) => b.pts - a.pts);
         $('standingsContainer').innerHTML = `<table><thead><tr><th>Rk</th><th>Player</th><th>W</th><th>L</th><th>Pts</th></tr></thead><tbody>
             ${sorted.map((p,i) => `<tr>
                 <td>#${i+1}</td>
-                <td><div class="player-cell"><img src="${p.avatar_url || ''}" class="avatar-sm"><span style="cursor:pointer; font-weight:bold" onclick="openProfile('${p.id}')">${p.name}</span></div></td>
+                <td><div class="player-cell"><img src="${p.avatar_url || ''}" class="avatar-sm"><span style="cursor:pointer; font-weight:bold" onclick="openProfile('${p.id}')">${escapeHtml(p.name)}</span></div></td>
                 <td>${p.w}</td><td>${p.l}</td><td style="color:var(--accent2); font-weight:bold">${p.pts}</td>
             </tr>`).join('')}
         </tbody></table>`;
@@ -601,6 +615,9 @@
         $('profileModal').classList.add('open');
     }
     window.closeProfile = () => $('profileModal').classList.remove('open');
+    // --- FIX: Added escapeHtml Helper ---
+    function escapeHtml(s){ return (s??"").toString().replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+    
     init();
   </script>
 </body>
