@@ -36,9 +36,23 @@
         }
 
         .wrap {
-            max-width: 900px;
+            width: 100%;
+            max-width: 1500px;
             margin: 28px auto;
-            padding: 0 16px 40px
+            padding: 0 16px 60px;
+        }
+
+        .detail-grid {
+            display: grid;
+            grid-template-columns: 1.1fr 1fr;
+            gap: 20px;
+            align-items: start;
+        }
+
+        @media (max-width: 1100px) {
+            .detail-grid {
+                grid-template-columns: 1fr;
+            }
         }
 
         /* --- NAVIGATION --- */
@@ -135,6 +149,54 @@
             border-radius: var(--radius);
             padding: 20px;
             margin-bottom: 20px;
+            width: 100%;
+            min-height: 220px;
+            box-shadow: rgba(0, 0, 0, 0.18) 0px 20px 40px -20px;
+        }
+
+        .card-matches {
+            min-height: 300px;
+        }
+
+        .matches-scroll {
+            max-height: 70vh;
+            overflow-y: auto;
+            padding-right: 6px;
+        }
+
+        .matches-scroll::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .matches-scroll::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 999px;
+        }
+
+        details.round-block {
+            border: 1px solid var(--line);
+            border-radius: 14px;
+            margin-bottom: 12px;
+            overflow: hidden;
+        }
+
+        details.round-block summary {
+            list-style: none;
+            cursor: pointer;
+            background: rgba(255, 255, 255, 0.03);
+            font-weight: 600;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            padding: 12px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: var(--muted);
+        }
+
+        details.round-block summary::-webkit-details-marker {
+            display: none;
         }
 
         h2 {
@@ -207,9 +269,20 @@
             align-items: center;
             background: rgba(0, 0, 0, 0.2);
             border: 1px solid var(--line);
-            padding: 10px 14px;
+            padding: 14px 18px;
             border-radius: 10px;
             margin-bottom: 8px;
+            min-height: 80px;
+        }
+
+        .match-row.clickable {
+            cursor: pointer;
+            transition: border-color 0.2s, background 0.2s;
+        }
+
+        .match-row.clickable:hover {
+            border-color: var(--accent);
+            background: rgba(124, 92, 255, 0.15);
         }
 
         .m-round {
@@ -423,6 +496,246 @@
             padding: 40px;
             color: var(--muted);
         }
+
+        /* Match detail modal */
+        .match-detail-card {
+            background: #1b2342;
+            border: 1px solid var(--accent);
+            border-radius: 24px;
+            width: min(900px, 95vw);
+            max-height: 90vh;
+            overflow: auto;
+            padding: 24px;
+            position: relative;
+            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.4);
+        }
+
+        .match-detail-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .score-badge {
+            font-size: 28px;
+            font-weight: 700;
+        }
+
+        .match-detail-body {
+            display: grid;
+            gap: 24px;
+        }
+
+        .deck-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+
+        @media (min-width: 1200px) {
+            .deck-grid {
+                grid-template-columns: repeat(2, minmax(360px, 1fr));
+            }
+        }
+
+        .deck-card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--line);
+            border-radius: 16px;
+            padding: 16px;
+        }
+
+        .deck-card.compact {
+            max-width: 380px;
+            margin: 0 auto;
+        }
+
+        .deck-toggle {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+
+        .deck-tab {
+            flex: 1;
+            border: 1px solid var(--line);
+            background: rgba(0, 0, 0, 0.2);
+            color: var(--muted);
+            padding: 6px 10px;
+            border-radius: 999px;
+            font-size: 12px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .deck-tab.active {
+            background: var(--accent);
+            border-color: var(--accent);
+            color: #fff;
+        }
+
+        .deck-card h4 {
+            margin: 0 0 8px;
+        }
+
+        .deck-cards {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+        }
+
+        .deck-cards img {
+            width: 100%;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .deck-actions {
+            margin-top: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 12px;
+        }
+
+        .deck-actions a {
+            color: var(--accent2);
+            font-weight: 600;
+            text-decoration: none;
+        }
+
+        .match-block {
+            margin-bottom: 16px;
+        }
+
+        .match-dropdown {
+            display: none;
+            background: rgba(0, 0, 0, 0.35);
+            border: 1px solid var(--line);
+            border-radius: 16px;
+            padding: 24px;
+            margin-top: 14px;
+            width: 100%;
+        }
+
+        .match-dropdown.open {
+            display: block;
+        }
+
+        .battle-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .battle-item {
+            border: 1px solid var(--line);
+            border-radius: 16px;
+            overflow: hidden;
+            background: rgba(0, 0, 0, 0.2);
+        }
+
+        .battle-item summary {
+            list-style: none;
+            cursor: pointer;
+            padding: 14px 18px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+            font-weight: 600;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--muted);
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .battle-item summary::-webkit-details-marker {
+            display: none;
+        }
+
+        .battle-item summary .summary-meta {
+            font-size: 11px;
+            text-transform: none;
+            color: var(--muted);
+            font-weight: 400;
+        }
+
+        .battle-card {
+            padding: 18px;
+            border-top: 1px solid var(--line);
+        }
+
+        .battle-grid {
+            display: grid;
+            grid-template-columns: minmax(220px, 320px) 1fr;
+            gap: 20px;
+            align-items: start;
+        }
+
+        .battle-summary {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .battle-summary .summary-meta {
+            font-size: 12px;
+            color: var(--muted);
+        }
+
+        .battle-summary .score {
+            font-size: 32px;
+            font-weight: 700;
+        }
+
+        .battle-summary .details {
+            font-size: 12px;
+            color: var(--muted);
+        }
+
+        @media (max-width: 900px) {
+            .battle-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .battle-card.diff-low {
+            border-left: 4px solid var(--accent2);
+        }
+
+        .battle-card.diff-mid {
+            border-left: 4px solid #ffd266;
+        }
+
+        .battle-card.diff-high {
+            border-left: 4px solid var(--loser);
+        }
+
+        .battle-card.three-crown {
+            background: rgba(255, 215, 0, 0.12);
+            box-shadow: inset 0 0 25px rgba(255, 215, 0, 0.2);
+        }
+
+        @media (max-width: 768px) {
+            .match-row {
+                flex-direction: column;
+                gap: 8px;
+                text-align: center;
+            }
+
+            .match-row .vs-side,
+            .match-row .vs-side.right {
+                justify-content: center;
+                flex-direction: row;
+            }
+
+            .match-row .vs-mid {
+                width: auto;
+            }
+        }
     </style>
 </head>
 
@@ -453,6 +766,22 @@
         </div>
     </div>
 
+    <div class="modal-overlay" id="matchModal">
+        <div class="match-detail-card">
+            <button class="close-modal" onclick="closeMatchModal()">✕</button>
+            <div class="match-detail-header">
+                <div>
+                    <div id="matchModalTitle" style="font-size:18px; font-weight:600;">Match Details</div>
+                    <div id="matchModalMeta" style="font-size:12px; color:var(--muted);">Mode • Date</div>
+                </div>
+                <div class="score-badge" id="matchModalScore">0 - 0</div>
+            </div>
+            <div class="match-detail-body" id="matchModalBody">
+                <div class="loader">Fetching decks...</div>
+            </div>
+        </div>
+    </div>
+
     <div class="wrap">
 
         <div class="nav">
@@ -476,14 +805,16 @@
                     <h1 id="dName">Tournament</h1>
                     <span id="dDate" style="color:var(--muted)"></span>
                 </div>
-                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px;">
-                    <div class="card">
+                <div class="detail-grid">
+                    <div class="card card-standings">
                         <h2>Standings</h2>
                         <div id="standingsArea"></div>
                     </div>
-                    <div class="card">
+                    <div class="card card-matches">
                         <h2>Matches</h2>
-                        <div id="matchesArea"></div>
+                        <div class="matches-scroll">
+                            <div id="matchesArea"></div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -527,6 +858,7 @@
     <script type="module">
         const SUPABASE_URL = "https://izmzpnfpcdxdqwgghsyq.supabase.co";
         const SUPABASE_ANON_KEY = "sb_publishable_4kW-ZwFSbzqPkWz63jYcGw_Kldfdp7R";
+        const API_PROXY_URL = localStorage.getItem('cr_public_api') || "http://localhost:8000";
 
         import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
         const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -534,6 +866,10 @@
         const $ = (id) => document.getElementById(id);
         let currentTid = null;
         let playersMap = new Map(); // Store full player objects
+        const matchMap = new Map();
+        const battleLogCache = new Map();
+        const battleDeckCache = new Map();
+        const desktopQuery = window.matchMedia('(min-width: 1024px)');
 
         // --- MAIN TABS ---
         window.switchMainTab = (tab) => {
@@ -586,8 +922,10 @@
             const { data: players } = await supabase.from("tournament_players").select("player_id, players(*)").eq("tournament_id", tid);
 
             playersMap.clear();
+            matchMap.clear();
             const stats = new Map();
             if (players) players.forEach(p => { playersMap.set(p.player_id, p.players); stats.set(p.player_id, { ...p.players, w: 0, l: 0, pts: 0 }); });
+            if (matches) matches.forEach(m => matchMap.set(m.id, m));
 
             const rounds = {};
             if (matches) {
@@ -726,19 +1064,34 @@
         }
 
         function renderMatches(rounds) {
+            battleDeckCache.clear();
             let html = "";
-            Object.keys(rounds).sort((a, b) => a - b).forEach(r => {
-                html += `<div class="m-round">Round ${r}</div>`;
+            Object.keys(rounds).sort((a, b) => a - b).forEach((r, idx) => {
+                html += `<details class="round-block" ${idx === 0 ? 'open' : ''}>
+                    <summary>Round ${r}<span style="font-size:11px; color:var(--muted);">Matches: ${rounds[r].length}</span></summary>
+                    <div style="padding:14px 16px;">`;
                 rounds[r].forEach(m => {
                     const pA = m.playersA, pB = m.playersB;
                     let cA = "vs-side", cB = "vs-side right", mid = "vs";
                     if (m.completed) {
                         if (m.winner_id == m.player_a_id) { cA += " win"; cB += " lose"; mid = `1 - 0`; } else { cB += " win"; cA += " lose"; mid = `0 - 1`; }
                     }
-                    html += `<div class="match-row"><div class="${cA}"><img src="${pA?.avatar_url || ''}" class="avatar-sm"><span>${escapeHtml(pA?.name)}</span></div><div class="vs-mid">${mid}</div><div class="${cB}"><img src="${pB?.avatar_url || ''}" class="avatar-sm"><span>${escapeHtml(pB?.name)}</span></div></div>`;
+                    html += `
+                    <div class="match-block">
+                        <div class="match-row clickable" onclick="toggleMatchDropdown('${m.id}')">
+                            <div class="${cA}"><img src="${pA?.avatar_url || ''}" class="avatar-sm"><span>${escapeHtml(pA?.name)}</span></div>
+                            <div class="vs-mid">${mid}</div>
+                            <div class="${cB}"><img src="${pB?.avatar_url || ''}" class="avatar-sm"><span>${escapeHtml(pB?.name)}</span></div>
+                        </div>
+                        <div class="match-dropdown" id="matchDropdown-${m.id}">
+                            <div style="font-size:12px; color:var(--muted);">Click above to load match details.</div>
+                        </div>
+                    </div>`;
                 });
+                html += `</div></details>`;
             });
             $('matchesArea').innerHTML = html || '<div class="loader">No matches.</div>';
+            handleResponsiveDropdowns();
         }
 
         window.openProfile = (pid) => {
@@ -751,6 +1104,278 @@
         window.closeProfile = () => $('profileModal').classList.remove('open');
         function escapeHtml(s) { return (s ?? "").toString().replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); }
         function fmtDate(d) { try { return new Date(d).toLocaleDateString(); } catch { return d; } }
+
+        // MATCH DETAIL MODAL
+        window.openMatchDetails = async (mid) => {
+        const match = matchMap.get(mid);
+        if (!match) return;
+        const title = `${match.playersA?.name || 'Player A'} vs ${match.playersB?.name || 'Player B'}`;
+        $('matchModalTitle').innerText = title;
+        $('matchModalMeta').innerText = 'Loading...';
+        $('matchModalScore').innerText = '-';
+        $('matchModalBody').innerHTML = '<div class="loader">Fetching decks from Clash Royale...</div>';
+        $('matchModal').classList.add('open');
+        try {
+            const battles = await findBattlesForMatch(match);
+            if (!battles.length) {
+                $('matchModalBody').innerHTML = `<div class="loader">No recent battles found between these players. Results may still be pending.</div>`;
+                $('matchModalMeta').innerText = 'No battle data yet';
+                $('matchModalScore').innerText = match.completed ? (match.winner_id === match.player_a_id ? '1 - 0' : '0 - 1') : '-';
+                return;
+            }
+            const primary = battles[0];
+            const participants = mapBattlePlayers(primary, match);
+            $('matchModalMeta').innerText = formatBattleMeta(primary);
+            $('matchModalScore').innerText = `${participants.playerA?.crowns ?? 0} - ${participants.playerB?.crowns ?? 0}`;
+            $('matchModalBody').innerHTML = renderBattleList(battles, match, 'modal');
+        } catch (err) {
+            $('matchModalBody').innerHTML = `<div class="loader">Failed to load decks: ${escapeHtml(err.message || err)}</div>`;
+            $('matchModalMeta').innerText = 'Error loading battle data';
+            $('matchModalScore').innerText = '-';
+        }
+        }
+
+        window.closeMatchModal = () => $('matchModal').classList.remove('open');
+
+        window.toggleMatchDropdown = async (mid) => {
+            if (!isDesktopView()) {
+                openMatchDetails(mid);
+                return;
+            }
+            const panel = document.getElementById(`matchDropdown-${mid}`);
+            if (!panel) return;
+            const shouldOpen = !panel.classList.contains('open');
+            if (shouldOpen) {
+                panel.classList.add('open');
+                await loadMatchDropdown(mid);
+            } else {
+                panel.classList.remove('open');
+            }
+        }
+
+        async function loadMatchDropdown(mid) {
+            if (!isDesktopView()) return;
+            const panel = document.getElementById(`matchDropdown-${mid}`);
+            if (!panel || panel.dataset.loading === 'true') return;
+            const match = matchMap.get(mid);
+            if (!match) {
+                panel.innerHTML = '<div class="loader">Match data missing.</div>';
+                return;
+            }
+            panel.innerHTML = '<div class="loader">Loading battle data...</div>';
+            panel.dataset.loading = 'true';
+            try {
+                const battles = await findBattlesForMatch(match);
+                if (!battles.length) {
+                    panel.innerHTML = '<div class="loader">No recent battles found.</div>';
+                } else {
+                    panel.innerHTML = renderBattleList(battles, match, 'inline');
+                    panel.dataset.loaded = 'true';
+                }
+            } catch (err) {
+                panel.innerHTML = `<div class="loader">Failed: ${escapeHtml(err.message || err)}</div>`;
+            } finally {
+                delete panel.dataset.loading;
+            }
+        }
+
+        async function findBattlesForMatch(match) {
+            const combos = [
+                { primary: match.playersA, opponent: match.playersB },
+                { primary: match.playersB, opponent: match.playersA }
+            ];
+            const found = [];
+            const seen = new Set();
+            for (const combo of combos) {
+                const tag = combo.primary?.tag;
+                const oppTag = combo.opponent?.tag;
+                if (!tag || !oppTag) continue;
+                const log = await fetchBattleLog(tag);
+                const normalizedOpp = normalizeTag(oppTag);
+                log.forEach(b => {
+                    const opponent = (b.opponent || [])[0];
+                    if (!opponent || normalizeTag(opponent.tag) !== normalizedOpp) return;
+                    const key = `${b.battleTime}-${opponent.tag}-${b.type}`;
+                    if (seen.has(key)) return;
+                    seen.add(key);
+                    found.push(b);
+                });
+            }
+            return found.sort((a, b) => parseBattleTime(b.battleTime) - parseBattleTime(a.battleTime));
+        }
+
+        async function fetchBattleLog(playerTag) {
+            const normalized = normalizeTag(playerTag);
+            const cached = battleLogCache.get(normalized);
+            const now = Date.now();
+            if (cached && now - cached.timestamp < 5_000) {
+                return cached.data;
+            }
+            const response = await fetch(API_PROXY_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ playerTag, mode: 'battlelog' })
+            });
+            if (!response.ok) {
+                const err = await response.json().catch(() => ({}));
+                throw new Error(err.error || `Proxy error (${response.status})`);
+            }
+            const data = await response.json();
+            battleLogCache.set(normalized, { data, timestamp: now });
+            return data;
+        }
+
+        function mapBattlePlayers(battle, match) {
+            const tagA = normalizeTag(match.playersA?.tag);
+            const tagB = normalizeTag(match.playersB?.tag);
+            const lookup = (list) => {
+                const map = {};
+                (list || []).forEach(p => map[normalizeTag(p.tag || '')] = p);
+                return map;
+            };
+            const team = lookup(battle.team);
+            const opponent = lookup(battle.opponent);
+            const playerA = team[tagA] || opponent[tagA];
+            const playerB = team[tagB] || opponent[tagB];
+            return { playerA, playerB };
+        }
+
+        function renderSingleDeck(playerData, label) {
+            if (!playerData) {
+                return `<div class="deck-card compact"><h4>${escapeHtml(label)}</h4><div style="color:var(--muted); font-size:13px;">No cards recorded.</div></div>`;
+            }
+            const cards = playerData.cards || [];
+            const deckLink = cards.length ? `https://link.clashroyale.com/deck/en?deck=${cards.map(c => c.id).join(';')}` : null;
+            return `
+                <div class="deck-card compact">
+                    <h4>${escapeHtml(label)}</h4>
+                    <div class="deck-cards">
+                        ${cards.map(c => `<img src="${c.iconUrls?.medium || ''}" alt="${escapeHtml(c.name)}">`).join('')}
+                    </div>
+                    <div class="deck-actions">
+                        <span>${cards.length ? 'Tap a card to inspect in Clash Royale.' : 'No deck data.'}</span>
+                        ${deckLink ? `<a href="${deckLink}" target="_blank" rel="noopener">Copy Deck</a>` : ''}
+                    </div>
+                </div>
+            `;
+        }
+
+        function normalizeTag(tag) {
+            return (tag || '').replace(/#/g, '').trim().toUpperCase();
+        }
+
+        function parseBattleTime(value) {
+            const yr = value.slice(0, 4), mo = value.slice(4, 6), day = value.slice(6, 8);
+            const hr = value.slice(9, 11), min = value.slice(11, 13), sec = value.slice(13, 15);
+            return Date.UTC(+yr, +mo - 1, +day, +hr, +min, +sec);
+        }
+
+        function formatBattleMeta(battle) {
+            const mode = battle.gameMode?.name || 'Unknown Mode';
+            const ts = new Date(parseBattleTime(battle.battleTime)).toLocaleString();
+            return `${mode} • ${ts}`;
+        }
+
+        function renderBattleList(battles, match, context = 'inline') {
+            return `<div class="battle-list">
+                ${battles.map((battle, idx) => renderBattleItem(battle, idx + 1, match, context, idx === 0)).join('')}
+            </div>`;
+        }
+
+        function renderBattleItem(battle, index, match, context, openByDefault) {
+            const participants = mapBattlePlayers(battle, match);
+            const scoreA = participants.playerA?.crowns ?? 0;
+            const scoreB = participants.playerB?.crowns ?? 0;
+            const diff = Math.abs(scoreA - scoreB);
+            let diffClass = diff >= 2 ? 'diff-high' : diff === 1 ? 'diff-mid' : 'diff-low';
+            if (scoreA === 3 || scoreB === 3) diffClass += ' three-crown';
+            const winner = scoreA === scoreB ? 'Draw' : (scoreA > scoreB ? (match.playersA?.name || 'Player A') : (match.playersB?.name || 'Player B'));
+            const diffText = diff === 0 ? 'Even crowns' : `${diff} crown${diff === 1 ? '' : 's'} difference`;
+            const battleKey = createBattleKey(match.id, index, battle, context);
+            battleDeckCache.set(battleKey, {
+                playerA: participants.playerA,
+                playerB: participants.playerB,
+                labelA: match.playersA?.name || 'Player A',
+                labelB: match.playersB?.name || 'Player B'
+            });
+            return `
+                <details class="battle-item ${diffClass}" ${openByDefault ? 'open' : ''}>
+                    <summary>
+                        <span>Battle ${index}</span>
+                        <span class="summary-meta">${formatBattleMeta(battle)}</span>
+                        <span>${scoreA} - ${scoreB}</span>
+                    </summary>
+                    <div class="battle-card">
+                        <div class="battle-grid">
+                            <div class="battle-summary">
+                                <div class="summary-meta">${formatBattleMeta(battle)}</div>
+                                <div class="score">${scoreA} - ${scoreB}</div>
+                                <div class="details">
+                                    Winner: ${escapeHtml(winner)}<br>${diffText}${(scoreA === 3 || scoreB === 3) ? ' • Three-Crown!' : ''}
+                                </div>
+                            </div>
+                            <div class="battle-detail">
+                                <div class="deck-toggle">
+                                    <button type="button" class="deck-tab active" data-battle="${battleKey}" data-player="A">${escapeHtml(match.playersA?.name || 'Player A')}</button>
+                                    <button type="button" class="deck-tab" data-battle="${battleKey}" data-player="B">${escapeHtml(match.playersB?.name || 'Player B')}</button>
+                                </div>
+                                <div class="deck-view" id="deckView-${battleKey}">
+                                    ${renderSingleDeck(participants.playerA, match.playersA?.name || 'Player A')}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </details>
+            `;
+        }
+
+        function createBattleKey(matchId, index, battle, context = '') {
+            const raw = `${context}-${matchId || ''}-${index}-${battle.battleTime}`;
+            return raw.replace(/[^a-zA-Z0-9_-]/g, '');
+        }
+
+        function handleResponsiveDropdowns() {
+            if (isDesktopView()) return;
+            document.querySelectorAll('[id^="matchDropdown-"]').forEach(panel => {
+                panel.classList.remove('open');
+                delete panel.dataset.loaded;
+                delete panel.dataset.loading;
+            });
+        }
+
+        function isDesktopView() {
+            return desktopQuery.matches;
+        }
+
+        if (desktopQuery.addEventListener) desktopQuery.addEventListener('change', handleResponsiveDropdowns);
+        else desktopQuery.addListener(handleResponsiveDropdowns);
+        handleResponsiveDropdowns();
+
+        document.addEventListener('click', (event) => {
+            const tab = event.target.closest('.deck-tab');
+            if (!tab) return;
+            event.stopPropagation();
+            const battleKey = tab.dataset.battle;
+            const playerKey = tab.dataset.player;
+            const info = battleDeckCache.get(battleKey);
+            if (!info) return;
+            const container = document.getElementById(`deckView-${battleKey}`);
+            if (!container) return;
+            const data = playerKey === 'A' ? info.playerA : info.playerB;
+            const label = playerKey === 'A' ? info.labelA : info.labelB;
+            container.innerHTML = renderSingleDeck(data, label);
+            tab.parentElement.querySelectorAll('.deck-tab').forEach(btn => btn.classList.remove('active'));
+            tab.classList.add('active');
+        });
+
+        document.addEventListener('toggle', (event) => {
+            if (event.target.matches('.battle-item') && event.target.open) {
+                const parent = event.target.parentElement;
+                parent.querySelectorAll('.battle-item').forEach(item => {
+                    if (item !== event.target) item.open = false;
+                });
+            }
+        });
 
         $('backBtn').onclick = () => { $('listView').classList.remove('hidden'); $('detailView').classList.add('hidden'); };
         $('refreshBtn').onclick = () => { if (currentTid) loadDetails(currentTid); };
