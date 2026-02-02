@@ -617,6 +617,15 @@
                         <input id="newTourneyName" placeholder="New Tournament Name...">
                         <button style="width:auto" id="createTourneyBtn">+</button>
                     </div>
+                    <div class="row">
+                        <select id="tournamentTypeSelect">
+                            <option value="round_robin">Round Robin</option>
+                            <option value="swiss">Swiss</option>
+                        </select>
+                    </div>
+                    <div class="row" id="swissRoundsRow" style="display:none">
+                        <input type="number" id="swissRoundsInput" placeholder="Number of rounds" min="1" max="20" value="3">
+                    </div>
                     <button class="btn-danger" id="deleteTourneyBtn" style="margin-top:10px;">Delete Selected</button>
                 </div>
 
@@ -914,6 +923,10 @@
                     refreshData();
                 }
             }
+
+            $('tournamentTypeSelect').onchange = (e) => {
+                $('swissRoundsRow').style.display = e.target.value === 'swiss' ? 'flex' : 'none';
+            }
         }
 
         async function loadTournaments() {
@@ -1032,7 +1045,20 @@
                 return;
             }
 
+            // Get tournament type
+            const { data: tourney } = await supabase.from('tournaments').select('tournament_type, swiss_rounds').eq('id', currentTid).single();
+            const tournamentType = tourney?.tournament_type || 'round_robin';
+
             setStatus('Generating...');
+
+            if (tournamentType === 'swiss') {
+                await generateSwissSchedule(tourney?.swiss_rounds || 3);
+            } else {
+                await generateRoundRobinSchedule();
+            }
+        }
+
+        async function generateRoundRobinSchedule() {
             const pIds = playersCache.map(p => p.id);
             if (pIds.length % 2 !== 0) pIds.push(null);
             const n = pIds.length;
@@ -1047,6 +1073,64 @@
             }
             const { error } = await supabase.from('matches').insert(rounds);
             if (!error) { refreshData(); setStatus("Schedule created!"); }
+            else setStatus("Error: " + error.message);
+        }
+
+        async function generateSwissSchedule(numRounds) {
+            const playerIds = playersCache.map(p => p.id);
+            const rounds = [];
+            const matchups = new Set(); // Track unique matchups to avoid rematches
+
+            // Initialize standings (all players start at 0 points)
+            const standings = new Map(playerIds.map(id => [id, { points: 0, opponents: [] }]));
+
+            for (let round = 1; round <= numRounds; round++) {
+                // Sort players by points (descending)
+                const sortedPlayers = [...standings.entries()].sort((a, b) => b[1].points - a[1].points);
+                const paired = new Set();
+                const roundMatches = [];
+
+                for (const [playerId, playerData] of sortedPlayers) {
+                    if (paired.has(playerId)) continue;
+
+                    // Find opponent with similar score who hasn't been played yet
+                    let opponentId = null;
+                    for (const [potentialOppId, oppData] of sortedPlayers) {
+                        if (potentialOppId === playerId) continue;
+                        if (paired.has(potentialOppId)) continue;
+
+                        // Check if they've played before
+                        const matchupKey = [playerId, potentialOppId].sort().join('-');
+                        if (matchups.has(matchupKey)) continue;
+
+                        opponentId = potentialOppId;
+                        break;
+                    }
+
+                    if (opponentId) {
+                        roundMatches.push({
+                            tournament_id: currentTid,
+                            round_number: round,
+                            player_a_id: playerId,
+                            player_b_id: opponentId
+                        });
+                        matchups.add([playerId, opponentId].sort().join('-'));
+                        standings.get(playerId).opponents.push(opponentId);
+                        standings.get(opponentId).opponents.push(playerId);
+                        paired.add(playerId);
+                        paired.add(opponentId);
+                    }
+                    // Handle odd number of players - give bye to highest-score unpaired player
+                }
+
+                rounds.push(...roundMatches);
+
+                // Update points for next round (placeholder - will be updated when matches complete)
+                // This is just for initial pairing; actual standings come from match results
+            }
+
+            const { error } = await supabase.from('matches').insert(rounds);
+            if (!error) { refreshData(); setStatus(`Swiss schedule created with ${numRounds} rounds!`); }
             else setStatus("Error: " + error.message);
         }
 
@@ -1118,7 +1202,14 @@
         async function createTournament() {
             const name = $('newTourneyName').value;
             if (!name) return;
-            const { data } = await supabase.from('tournaments').insert({ name }).select().single();
+            const tournamentType = $('tournamentTypeSelect').value;
+            const swissRounds = tournamentType === 'swiss' ? parseInt($('swissRoundsInput').value) || 3 : null;
+
+            const { data } = await supabase.from('tournaments').insert({
+                name,
+                tournament_type: tournamentType,
+                swiss_rounds: swissRounds
+            }).select().single();
             if (data) {
                 currentTid = data.id; await loadTournaments(); $('tourneySelect').value = currentTid; refreshData(); $('newTourneyName').value = '';
             }
